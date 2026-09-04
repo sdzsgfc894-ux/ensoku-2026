@@ -834,12 +834,21 @@ editButton.addEventListener('click', async () => {
   } = await db.auth.getSession();
 
   if (session) {
-    editButton.textContent = '編集中';
-    document.body.classList.add('is-editing');
-    loginStatus.textContent =
-      'ログイン済みです。';
+
+  if (document.body.classList.contains('is-editing')) {
+    document.body.classList.remove('is-editing');
+    editButton.textContent = '編集';
+    loginStatus.textContent = '';
     return;
   }
+
+  editButton.textContent = '編集中';
+  document.body.classList.add('is-editing');
+  loginStatus.textContent =
+    'ログイン済みです。';
+
+  return;
+}
 
   loginPanel.classList.add('open');
 });
