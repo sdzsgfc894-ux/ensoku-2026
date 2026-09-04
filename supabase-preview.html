@@ -955,29 +955,29 @@ document.addEventListener('click', async (event) => {
 
   spotEditIntro.value =
     data.intro ?? '';
-
+  /*
 　 spotEditOfficial.value =
     data.official_url ?? '';
 
    spotEditInstagram.value =
     data.instagram_url ?? '';
 
- spotEditReservation.value =
-  data.reservation_url ?? '';
+   spotEditReservation.value =
+    data.reservation_url ?? '';
+  */  
+　  spotEditFacebook.value =
+  　  data.facebook_url ?? '';
+
+　  spotEditX.value =
+ 　   data.x_url ?? '';
+
+　  spotEditGoogleMaps.value =
+ 　   data.google_maps_url ?? '';
+
+　  spotEditOtherUrl.value =
+ 　   data.other_url ?? '';
   
-　spotEditFacebook.value =
-  　data.facebook_url ?? '';
-
-　spotEditX.value =
- 　 data.x_url ?? '';
-
-　spotEditGoogleMaps.value =
- 　 data.google_maps_url ?? '';
-
-　spotEditOtherUrl.value =
- 　 data.other_url ?? '';
-  
-  spotEditStatus.textContent = '';
+   spotEditStatus.textContent = '';
 
   spotEditor.classList.add('open');
 });
