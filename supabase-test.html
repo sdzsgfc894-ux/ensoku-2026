@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Supabase接続テスト</title>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.7;
+    }
+
+    .ok { color: #16794b; }
+    .error { color: #b42318; }
+
+    pre {
+      background: #f5f5f2;
+      padding: 16px;
+      border-radius: 10px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>遠足候補2026</h1>
+<h2>Supabase 接続テスト</h2>
+
+<p id="status">接続中...</p>
+
+<h3>Courses</h3>
+<pre id="courses">読み込み中...</pre>
+
+<h3>Spots</h3>
+<pre id="spots">読み込み中...</pre>
+
+<h3>Course Spots</h3>
+<pre id="course-spots">読み込み中...</pre>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = 'https://mkpcmsenppdbrcwshbil.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_GlNSsExtk_BUXidKn1ckrw_hkktIDLJ';
+
+const db = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+async function loadData() {
+
+  const status = document.getElementById('status');
+
+  try {
+
+    const coursesResult =
+      await db
+        .from('public_courses')
+        .select('*');
+
+    if (coursesResult.error)
+      throw coursesResult.error;
+
+
+    const spotsResult =
+      await db
+        .from('public_spots')
+        .select('*');
+
+    if (spotsResult.error)
+      throw spotsResult.error;
+
+
+    const courseSpotsResult =
+      await db
+        .from('public_course_spots')
+        .select('*');
+
+    if (courseSpotsResult.error)
+      throw courseSpotsResult.error;
+
+
+    status.textContent =
+      '✓ Supabaseに接続できました';
+
+    status.className = 'ok';
+
+
+    document.getElementById('courses').textContent =
+      JSON.stringify(
+        coursesResult.data,
+        null,
+        2
+      );
+
+
+    document.getElementById('spots').textContent =
+      JSON.stringify(
+        spotsResult.data,
+        null,
+        2
+      );
+
+
+    document.getElementById('course-spots').textContent =
+      JSON.stringify(
+        courseSpotsResult.data,
+        null,
+        2
+      );
+
+  }
+
+  catch (e) {
+
+    status.textContent =
+      'エラー：' + e.message;
+
+    status.className = 'error';
+
+    console.error(e);
+  }
+}
+
+loadData();
+</script>
+
+</body>
+</html>
