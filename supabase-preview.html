@@ -760,6 +760,26 @@ async function loadSite() {
                     : ''
                 }
 
+                ${spot.parking
+                  ? `<p class="address">駐車場 ${escapeHTML(spot.parking)}</p>`
+                    : ''
+                }
+
+                ${spot.accessibility
+                  ? `<p class="address">バリアフリー ${escapeHTML(spot.accessibility)}</p>`
+                    : ''
+                }
+
+                ${spot.stay_duration
+                  ? `<p class="address">滞在時間 ${escapeHTML(spot.stay_duration)}</p>`
+                    : ''
+                }
+
+                ${spot.priority
+                  ? `<p class="address">優先度 ${escapeHTML(spot.priority)}</p>`
+                    : ''
+                }
+
                 ${
                   spot.intro
                     ? `<p class="intro">
