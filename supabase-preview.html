@@ -596,6 +596,15 @@ async function loadSite() {
               );
             }
 
+           if (spot.x_url) {
+             links.push(
+               `<a href="${escapeHTML(spot.x_url)}"
+                   target="_blank"
+                   rel="noopener">
+                   X
+     </a>`
+  );
+}
 
             return `
               <article class="spot">
