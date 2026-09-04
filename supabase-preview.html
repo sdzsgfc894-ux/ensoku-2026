@@ -911,7 +911,6 @@ const spotEditStatus =
 
 
 document.addEventListener('click', async (event) => {
-  try {
 
   const button =
     event.target.closest('.spot-edit-button');
@@ -993,12 +992,6 @@ document.addEventListener('click', async (event) => {
    spotEditStatus.textContent = '';
 
   spotEditor.classList.add('open');
-
-  } catch (error) {
-    console.error(error);
-    spotEditStatus.textContent =
-      '読み込みエラー：' + error.message;
-  }
 });
 
 
