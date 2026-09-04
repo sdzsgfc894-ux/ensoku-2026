@@ -332,6 +332,30 @@ body.is-editing .spot-edit-button {
   color: white;
   border-color: #262b24;
 } 
+.spot-add-button {
+  display: none;
+
+  position: fixed;
+  top: 18px;
+  right: 92px;
+  z-index: 2500;
+
+  padding: 9px 14px;
+
+  border: 1px solid #d6d5cd;
+  background: #fffefa;
+  color: #30332d;
+
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+
+  box-shadow: 0 3px 12px rgba(0,0,0,.08);
+}
+
+body.is-editing .spot-add-button {
+  display: inline-block;
+}  
   </style>
 </head>
 
@@ -340,7 +364,7 @@ body.is-editing .spot-edit-button {
   編集
 </button>
 
-<button id="spot-add-button" class="spot-edit-button" type="button">
+<button id="spot-add-button" class="spot-add-button" type="button">
   ＋ スポット追加
 </button>
   
