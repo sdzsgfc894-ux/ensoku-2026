@@ -340,6 +340,10 @@ body.is-editing .spot-edit-button {
   編集
 </button>
 
+<button id="spot-add-button" class="spot-edit-button" type="button">
+  ＋ スポット追加
+</button>
+  
 <div id="login-panel" class="login-panel">
   <div class="login-box">
     <h2>編集モード</h2>
@@ -962,6 +966,10 @@ loginSubmit.addEventListener('click', async () => {
   }
 });
 let editingSpotId = null;
+
+const spotAddButton =
+  document.getElementById('spot-add-button');
+  
 const spotEditor =
   document.getElementById('spot-editor');
 
@@ -1136,6 +1144,34 @@ document.addEventListener('click', async (event) => {
 
   spotEditor.classList.add('open');
 });
+spotAddButton.addEventListener('click', () => {
+
+  editingSpotId = null;
+
+  spotEditName.value = '';
+  spotEditAddress.value = '';
+  spotEditTel.value = '';
+  spotEditHours.value = '';
+  spotEditClosed.value = '';
+  spotEditParking.value = '';
+  spotEditAccessibility.value = '';
+  spotEditStayDuration.value = '';
+  spotEditPriority.value = '';
+  spotEditGenre.value = '';
+  spotEditIntro.value = '';
+
+  spotEditOfficial.value = '';
+  spotEditInstagram.value = '';
+  spotEditReservation.value = '';
+  spotEditFacebook.value = '';
+  spotEditX.value = '';
+  spotEditGoogleMaps.value = '';
+  spotEditOtherUrl.value = '';
+
+  spotEditStatus.textContent = '';
+
+  spotEditor.classList.add('open');
+});
 
 
 spotCancel.addEventListener('click', () => {
@@ -1143,41 +1179,62 @@ spotCancel.addEventListener('click', () => {
   spotEditor.classList.remove('open');
   spotEditStatus.textContent = '';
 });
+
+
 spotSave.addEventListener('click', async () => {
 
-  spotEditStatus.textContent =
-    '保存中...';
-
+  spotEditStatus.textContent = '保存中...';
   spotSave.disabled = true;
 
-  const {
-    error
-  } = await db
-    .from('spots')
-    .update({
-      name: spotEditName.value.trim(),
-      address: spotEditAddress.value.trim(),
-      tel: spotEditTel.value.trim(),
-      hours: spotEditHours.value.trim(),
-      closed: spotEditClosed.value.trim(),
-      parking: spotEditParking.value.trim(),
-      accessibility: spotEditAccessibility.value.trim(),
-      stay_duration: spotEditStayDuration.value.trim(),
-      priority: spotEditPriority.value || null,
-      genre: spotEditGenre.value.trim(),
-      intro: spotEditIntro.value.trim(),
-      official_url: spotEditOfficial.value.trim(),
-      instagram_url: spotEditInstagram.value.trim(),
-      reservation_url: spotEditReservation.value.trim(),
-      facebook_url: spotEditFacebook.value.trim(),
-      x_url: spotEditX.value.trim(),
-      google_maps_url: spotEditGoogleMaps.value.trim(),
-      other_url: spotEditOtherUrl.value.trim(),
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', editingSpotId);
+  const spotPayload = {
+    name: spotEditName.value.trim(),
+    address: spotEditAddress.value.trim(),
+    tel: spotEditTel.value.trim(),
+    hours: spotEditHours.value.trim(),
+    closed: spotEditClosed.value.trim(),
+    parking: spotEditParking.value.trim(),
+    accessibility: spotEditAccessibility.value.trim(),
+    stay_duration: spotEditStayDuration.value.trim(),
+    priority: spotEditPriority.value || null,
+    genre: spotEditGenre.value.trim(),
+    intro: spotEditIntro.value.trim(),
+
+    official_url: spotEditOfficial.value.trim(),
+    instagram_url: spotEditInstagram.value.trim(),
+    reservation_url: spotEditReservation.value.trim(),
+    facebook_url: spotEditFacebook.value.trim(),
+    x_url: spotEditX.value.trim(),
+    google_maps_url: spotEditGoogleMaps.value.trim(),
+    other_url: spotEditOtherUrl.value.trim(),
+
+    updated_at: new Date().toISOString()
+  };
+
+  let error;
+
+  if (editingSpotId) {
+
+    const result = await db
+      .from('spots')
+      .update(spotPayload)
+      .eq('id', editingSpotId);
+
+    error = result.error;
+
+  } else {
+
+    const result = await db
+      .from('spots')
+      .insert({
+        ...spotPayload,
+        created_at: new Date().toISOString()
+      });
+
+    error = result.error;
+  }
 
   if (error) {
+
     spotEditStatus.textContent =
       '保存エラー：' + error.message;
 
@@ -1186,14 +1243,16 @@ spotSave.addEventListener('click', async () => {
   }
 
   spotEditStatus.textContent =
-    '保存しました';
+    editingSpotId ? '保存しました' : 'スポットを追加しました';
 
   await loadSite();
 
   setTimeout(() => {
+
     spotEditor.classList.remove('open');
     spotEditStatus.textContent = '';
     spotSave.disabled = false;
+
   }, 500);
 });
 </script>
