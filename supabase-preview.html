@@ -602,9 +602,39 @@ async function loadSite() {
                    target="_blank"
                    rel="noopener">
                    X
-     </a>`
-  );
-}
+                </a>`
+              );
+            }
+           
+          if (spot.facebook_url) {
+            links.push(
+               `<a href="${escapeHTML(spot.facebook_url)}"
+                   target="_blank"
+                   rel="noopener">
+                   Facebook
+               </a>`
+              );
+            }
+            
+          if (spot.google_maps_url) {
+            links.push(
+              `<a href="${escapeHTML(spot.google_maps_url)}"
+                  target="_blank"
+                  rel="noopener">
+                  Google Maps
+              </a>`
+             );
+            }
+
+         if (spot.other_url) {
+           links.push(
+             `<a href="${escapeHTML(spot.other_url)}"
+               target="_blank"
+              rel="noopener">
+              その他
+           </a>`
+          );
+         }
 
             return `
               <article class="spot">
