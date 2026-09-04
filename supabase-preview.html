@@ -768,6 +768,7 @@ loginSubmit.addEventListener('click', async () => {
     }, 500);
   }
 });
+let editingSpotId = null;
 const spotEditor =
   document.getElementById('spot-editor');
 
@@ -805,7 +806,8 @@ document.addEventListener('click', async (event) => {
 
   const spotId =
     button.dataset.spotId;
-
+  
+　　editingSpotId = spotId;
   spotEditStatus.textContent =
     '読み込み中...';
   
@@ -870,7 +872,7 @@ spotSave.addEventListener('click', async () => {
       intro: spotEditIntro.value.trim(),
       updated_at: new Date().toISOString()
     })
-    .eq('id', spotEditId.value);
+    .eq('id', editingSpotId);
 
   if (error) {
     spotEditStatus.textContent =
