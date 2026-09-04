@@ -421,6 +421,40 @@ body.is-editing .spot-edit-button {
      id="spot-edit-closed"
      type="text"
    >
+
+<label for="spot-edit-parking">
+  駐車場
+</label>
+<input
+  id="spot-edit-parking"
+  type="text"
+>
+
+<label for="spot-edit-accessibility">
+  バリアフリー
+</label>
+<input
+  id="spot-edit-accessibility"
+  type="text"
+>
+
+<label for="spot-edit-stay-duration">
+  滞在時間
+</label>
+<input
+  id="spot-edit-stay-duration"
+  type="text"
+>
+
+<label for="spot-edit-priority">
+  優先度
+</label>
+<select id="spot-edit-priority">
+  <option value="">未設定</option>
+  <option value="1">低</option>
+  <option value="2">中</option>
+  <option value="3">高</option>
+</select>
     
     <label for="spot-edit-genre">
       ジャンル
@@ -928,6 +962,18 @@ const spotEditHours =
 
 const spotEditClosed =
   document.getElementById('spot-edit-closed');
+
+const spotEditParking =
+  document.getElementById('spot-edit-parking');
+
+const spotEditAccessibility =
+  document.getElementById('spot-edit-accessibility');
+
+const spotEditStayDuration =
+  document.getElementById('spot-edit-stay-duration');
+
+const spotEditPriority =
+  document.getElementById('spot-edit-priority');
   
 const spotEditGenre =
   document.getElementById('spot-edit-genre');
@@ -999,7 +1045,7 @@ document.addEventListener('click', async (event) => {
     error
   } = await db
     .from('spots')
-    .select('id,name,address,tel,hours,closed,genre,intro,official_url,instagram_url,reservation_url,facebook_url,x_url,google_maps_url,other_url')
+    .select('id,name,address,tel,hours,closed,parking,accessibility,stay_duration,priority,genre,intro,official_url,instagram_url,reservation_url,facebook_url,x_url,google_maps_url,other_url')
     .eq('id', spotId)
     .single();
 
@@ -1026,6 +1072,18 @@ document.addEventListener('click', async (event) => {
 
   spotEditClosed.value =
     data.closed ?? '';
+
+  spotEditParking.value =
+    data.parking ?? '';
+
+  spotEditAccessibility.value =
+    data.accessibility ?? '';
+
+  spotEditStayDuration.value =
+    data.stay_duration ?? '';
+
+  spotEditPriority.value =
+    data.priority ?? '';
   
   spotEditGenre.value =
     data.genre ?? '';
@@ -1082,6 +1140,10 @@ spotSave.addEventListener('click', async () => {
       tel: spotEditTel.value.trim(),
       hours: spotEditHours.value.trim(),
       closed: spotEditClosed.value.trim(),
+      parking: spotEditParking.value.trim(),
+      accessibility: spotEditAccessibility.value.trim(),
+      stay_duration: spotEditStayDuration.value.trim(),
+      priority: spotEditPriority.value || null,
       genre: spotEditGenre.value.trim(),
       intro: spotEditIntro.value.trim(),
       official_url: spotEditOfficial.value.trim(),
