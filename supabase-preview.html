@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>遠足候補2026｜Supabase Preview</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #f3f1e9;
+      color: #22251f;
+      font-family:
+        -apple-system, BlinkMacSystemFont,
+        "Hiragino Sans", "Yu Gothic", sans-serif;
+    }
+
+    header {
+      padding: 24px 28px;
+      border-bottom: 1px solid #ddd9cc;
+      background: #f7f5ee;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    header p {
+      margin: 5px 0 0;
+      color: #77786f;
+      font-size: 13px;
+    }
+
+    main {
+      width: min(1100px, calc(100% - 32px));
+      margin: 40px auto 80px;
+    }
+
+    #status {
+      margin-bottom: 25px;
+      font-size: 13px;
+      color: #73766b;
+    }
+
+    .course {
+      margin-bottom: 55px;
+    }
+
+    .course-head {
+      margin-bottom: 18px;
+    }
+
+    .course-number {
+      font-size: 11px;
+      letter-spacing: .16em;
+      color: #747969;
+      font-weight: 700;
+    }
+
+    .course h2 {
+      margin: 6px 0 4px;
+      font-size: clamp(25px, 4vw, 38px);
+      font-weight: 650;
+    }
+
+    .annotation {
+      margin: 0;
+      color: #6e7067;
+      font-size: 14px;
+    }
+
+    .spots {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(230px, 1fr));
+      gap: 14px;
+    }
+
+    .spot {
+      background: #fffefa;
+      border: 1px solid #ddd9cc;
+      border-radius: 18px;
+      padding: 20px;
+      min-height: 180px;
+    }
+
+    .spot-order {
+      font-size: 11px;
+      color: #8a8d82;
+      letter-spacing: .1em;
+    }
+
+    .spot h3 {
+      margin: 8px 0 12px;
+      font-size: 20px;
+    }
+
+    .genre {
+      display: inline-block;
+      margin-bottom: 12px;
+      font-size: 11px;
+      color: #68705d;
+      border: 1px solid #d9ddcf;
+      border-radius: 20px;
+      padding: 4px 9px;
+    }
+
+    .address,
+    .intro {
+      font-size: 13px;
+      line-height: 1.7;
+      color: #676960;
+      margin: 5px 0;
+    }
+
+    .links {
+      margin-top: 14px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .links a {
+      color: #293429;
+      font-size: 12px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .error {
+      color: #b42318 !important;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 18px;
+      }
+
+      main {
+        width: min(100% - 24px, 1100px);
+        margin-top: 28px;
+      }
+
+      .spots {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>遠足候補 2026</h1>
+  <p>Supabase preview</p>
+</header>
+
+<main>
+  <div id="status">Supabaseから読み込み中...</div>
+  <div id="app"></div>
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const SUPABASE_URL = 'https://mkpcmsenppdbrcwshbil.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_GlNSsExtk_BUXidKn1ckrw_hkktIDLJ';
+
+const db = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+
+function escapeHTML(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+
+async function loadSite() {
+
+  const status = document.getElementById('status');
+  const app = document.getElementById('app');
+
+  try {
+
+    const [
+      coursesResult,
+      spotsResult,
+      linksResult
+    ] = await Promise.all([
+
+      db
+        .from('public_courses')
+        .select('*')
+        .order('sort_order'),
+
+      db
+        .from('public_spots')
+        .select('*'),
+
+      db
+        .from('public_course_spots')
+        .select('*')
+        .order('sort_order')
+
+    ]);
+
+
+    if (coursesResult.error)
+      throw coursesResult.error;
+
+    if (spotsResult.error)
+      throw spotsResult.error;
+
+    if (linksResult.error)
+      throw linksResult.error;
+
+
+    const courses = coursesResult.data;
+    const spots = spotsResult.data;
+    const courseSpots = linksResult.data;
+
+
+    const spotMap = new Map(
+      spots.map(spot => [spot.id, spot])
+    );
+
+
+    app.innerHTML = courses.map(
+      (course, courseIndex) => {
+
+        const memberships = courseSpots
+          .filter(
+            item =>
+              item.course_id === course.id
+          )
+          .sort(
+            (a, b) =>
+              a.sort_order - b.sort_order
+          );
+
+
+        const cards = memberships.map(
+          (membership, index) => {
+
+            const spot =
+              spotMap.get(membership.spot_id);
+
+            if (!spot) return '';
+
+
+            const links = [];
+
+            if (spot.official_url) {
+              links.push(
+                `<a href="${escapeHTML(spot.official_url)}"
+                    target="_blank"
+                    rel="noopener">
+                    公式サイト
+                 </a>`
+              );
+            }
+
+            if (spot.instagram_url) {
+              links.push(
+                `<a href="${escapeHTML(spot.instagram_url)}"
+                    target="_blank"
+                    rel="noopener">
+                    Instagram
+                 </a>`
+              );
+            }
+
+
+            return `
+              <article class="spot">
+
+                <div class="spot-order">
+                  STOP ${String(index + 1).padStart(2, '0')}
+                </div>
+
+                <h3>
+                  ${escapeHTML(spot.name)}
+                </h3>
+
+                ${
+                  spot.genre
+                    ? `<div class="genre">
+                         ${escapeHTML(spot.genre)}
+                       </div>`
+                    : ''
+                }
+
+                ${
+                  spot.address
+                    ? `<p class="address">
+                         ${escapeHTML(spot.address)}
+                       </p>`
+                    : ''
+                }
+
+                ${
+                  spot.intro
+                    ? `<p class="intro">
+                         ${escapeHTML(spot.intro)}
+                       </p>`
+                    : ''
+                }
+
+                ${
+                  links.length
+                    ? `<div class="links">
+                         ${links.join('')}
+                       </div>`
+                    : ''
+                }
+
+              </article>
+            `;
+          }
+        ).join('');
+
+
+        return `
+          <section class="course">
+
+            <div class="course-head">
+
+              <div class="course-number">
+                COURSE
+                ${String(courseIndex + 1).padStart(2, '0')}
+              </div>
+
+              <h2>
+                ${escapeHTML(course.name)}
+              </h2>
+
+              ${
+                course.annotation
+                  ? `<p class="annotation">
+                       ${escapeHTML(course.annotation)}
+                     </p>`
+                  : ''
+              }
+
+            </div>
+
+            <div class="spots">
+              ${cards}
+            </div>
+
+          </section>
+        `;
+      }
+    ).join('');
+
+
+    status.textContent =
+      `Supabaseから ${courses.length}コース・${spots.length}スポットを読み込みました。`;
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+    status.className = 'error';
+
+    status.textContent =
+      '読み込みエラー：' + error.message;
+  }
+}
+
+
+loadSite();
+
+</script>
+
+</body>
+</html>
