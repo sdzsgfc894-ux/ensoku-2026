@@ -236,6 +236,24 @@
   font-size: 12px;
   color: #77786f;
 }
+.spot-edit-button {
+  margin-top: 14px;
+  padding: 7px 11px;
+
+  border: 1px solid #d6d5cd;
+  background: #f8f7f1;
+  color: #30332d;
+
+  border-radius: 999px;
+  font-size: 11px;
+  cursor: pointer;
+
+  display: none;
+}
+
+body.is-editing .spot-edit-button {
+  display: inline-block;
+}
   </style>
 </head>
 
@@ -447,7 +465,15 @@ async function loadSite() {
                        </div>`
                     : ''
                 }
-
+${spot.name === 'ラ コリーナ近江八幡'
+  ? `<button
+       class="spot-edit-button"
+       type="button"
+       data-spot-id="${spot.id}">
+       編集
+     </button>`
+  : ''
+}
               </article>
             `;
           }
@@ -536,6 +562,7 @@ editButton.addEventListener('click', async () => {
 
   if (session) {
     editButton.textContent = '編集中';
+    document.body.classList.add('is-editing');
     loginStatus.textContent =
       'ログイン済みです。';
     return;
@@ -592,7 +619,7 @@ loginSubmit.addEventListener('click', async () => {
       'ログインしました。';
 
     editButton.textContent = '編集中';
-
+    document.body.classList.add('is-editing');
     setTimeout(() => {
       loginPanel.classList.remove('open');
     }, 500);
