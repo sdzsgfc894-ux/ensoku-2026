@@ -711,6 +711,21 @@ async function loadSite() {
                     : ''
                 }
 
+                ${spot.tel
+                  ? `<div class="meta">TEL ${escapeHTML(spot.tel)}</div>`
+                    : ''
+                }
+
+                ${spot.hours
+                  ? `<div class="meta">営業時間 ${escapeHTML(spot.hours)}</div>`
+                    : ''
+                }
+
+                ${spot.closed
+                  ? `<div class="meta">定休日 ${escapeHTML(spot.closed)}</div>`
+                    : ''
+                }
+
                 ${
                   spot.intro
                     ? `<p class="intro">
