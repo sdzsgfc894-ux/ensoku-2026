@@ -808,7 +808,9 @@ document.addEventListener('click', async (event) => {
 
   spotEditStatus.textContent =
     '読み込み中...';
-
+  
+  spotEditor.classList.add('open');
+  
   const {
     data,
     error
