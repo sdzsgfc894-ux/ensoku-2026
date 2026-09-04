@@ -416,6 +416,37 @@ body.is-editing .spot-edit-button {
       id="spot-edit-intro"
     ></textarea>
 
+    <label for="spot-edit-facebook">
+  Facebook
+</label>
+<input
+  id="spot-edit-facebook"
+  type="url"
+>
+
+<label for="spot-edit-x">
+  X
+</label>
+<input
+  id="spot-edit-x"
+  type="url"
+>
+
+<label for="spot-edit-google-maps">
+  Google Maps
+</label>
+<input
+  id="spot-edit-google-maps"
+  type="url"
+>
+
+<label for="spot-edit-other-url">
+  その他URL
+</label>
+<input
+  id="spot-edit-other-url"
+  type="url"
+>
     <div class="spot-editor-actions">
 
       <button
@@ -787,6 +818,18 @@ const spotEditGenre =
 const spotEditIntro =
   document.getElementById('spot-edit-intro');
 
+const spotEditFacebook =
+  document.getElementById('spot-edit-facebook');
+
+const spotEditX =
+  document.getElementById('spot-edit-x');
+
+const spotEditGoogleMaps =
+  document.getElementById('spot-edit-google-maps');
+
+const spotEditOtherUrl =
+  document.getElementById('spot-edit-other-url');
+  
 const spotCancel =
   document.getElementById('spot-cancel');
 
@@ -818,7 +861,7 @@ document.addEventListener('click', async (event) => {
     error
   } = await db
     .from('spots')
-    .select('id,name,address,genre,intro')
+    .select('id,name,address,genre,intro,facebook_url,x_url,google_maps_url,other_url')
     .eq('id', spotId)
     .single();
 
@@ -842,7 +885,19 @@ document.addEventListener('click', async (event) => {
 
   spotEditIntro.value =
     data.intro ?? '';
+  
+　spotEditFacebook.value =
+  　data.facebook_url ?? '';
 
+　spotEditX.value =
+ 　 data.x_url ?? '';
+
+　spotEditGoogleMaps.value =
+ 　 data.google_maps_url ?? '';
+
+　spotEditOtherUrl.value =
+ 　 data.other_url ?? '';
+  
   spotEditStatus.textContent = '';
 
   spotEditor.classList.add('open');
@@ -870,6 +925,10 @@ spotSave.addEventListener('click', async () => {
       address: spotEditAddress.value.trim(),
       genre: spotEditGenre.value.trim(),
       intro: spotEditIntro.value.trim(),
+      facebook_url: spotEditFacebook.value.trim(),
+      x_url: spotEditX.value.trim(),
+      google_maps_url: spotEditGoogleMaps.value.trim(),
+      other_url: spotEditOtherUrl.value.trim(),
       updated_at: new Date().toISOString()
     })
     .eq('id', editingSpotId);
