@@ -416,37 +416,62 @@ body.is-editing .spot-edit-button {
       id="spot-edit-intro"
     ></textarea>
 
+　　　<label for="spot-edit-official">
+  　　　公式サイト
+　　　</label>
+　　　<input
+  　　　id="spot-edit-official"
+  　　　type="url"
+　　　>
+
+　　　<label for="spot-edit-instagram">
+  　　　Instagram
+　　　</label>
+　　　<input
+  　　　id="spot-edit-instagram"
+  　　　type="url"
+　　　>
+
+　　　<label for="spot-edit-reservation">
+  　　　予約URL
+　　　</label>
+　　　<input
+  　　　id="spot-edit-reservation"
+  　　　type="url"
+　　　>
+    
     <label for="spot-edit-facebook">
-  Facebook
-</label>
-<input
-  id="spot-edit-facebook"
-  type="url"
->
+  　　　Facebook
+　　　</label>
+　　　<input
+  　　　id="spot-edit-facebook"
+  　　　type="url"
+　　　>
 
-<label for="spot-edit-x">
-  X
-</label>
-<input
-  id="spot-edit-x"
-  type="url"
->
+　　　<label for="spot-edit-x">
+  　　　X
+　　　</label>
+　　　<input
+  　　　id="spot-edit-x"
+  　　　type="url"
+　　　>
 
-<label for="spot-edit-google-maps">
-  Google Maps
-</label>
-<input
-  id="spot-edit-google-maps"
-  type="url"
->
+　　　<label for="spot-edit-google-maps">
+  　　　Google Maps
+　　　</label>
+　　　<input
+  　　　id="spot-edit-google-maps"
+  　　　type="url"
+　　　>
 
-<label for="spot-edit-other-url">
-  その他URL
-</label>
-<input
-  id="spot-edit-other-url"
-  type="url"
->
+　　　<label for="spot-edit-other-url">
+  　　　その他URL
+　　　</label>
+　　　<input
+  　　　id="spot-edit-other-url"
+  　　　type="url"
+　　　>
+  　
     <div class="spot-editor-actions">
 
       <button
@@ -854,6 +879,15 @@ const spotEditGenre =
 const spotEditIntro =
   document.getElementById('spot-edit-intro');
 
+const spotEditOfficial =
+  document.getElementById('spot-edit-official');
+
+const spotEditInstagram =
+  document.getElementById('spot-edit-instagram');
+
+const spotEditReservation =
+  document.getElementById('spot-edit-reservation');
+  
 const spotEditFacebook =
   document.getElementById('spot-edit-facebook');
 
@@ -897,7 +931,7 @@ document.addEventListener('click', async (event) => {
     error
   } = await db
     .from('spots')
-    .select('id,name,address,genre,intro,facebook_url,x_url,google_maps_url,other_url')
+    .select('id,name,address,genre,intro,official_url,instagram_url,reservation_url,facebook_url,x_url,google_maps_url,other_url')
     .eq('id', spotId)
     .single();
 
@@ -921,6 +955,15 @@ document.addEventListener('click', async (event) => {
 
   spotEditIntro.value =
     data.intro ?? '';
+
+　 spotEditOfficial.value =
+    data.official_url ?? '';
+
+   spotEditInstagram.value =
+    data.instagram_url ?? '';
+
+ spotEditReservation.value =
+  data.reservation_url ?? '';
   
 　spotEditFacebook.value =
   　data.facebook_url ?? '';
@@ -961,6 +1004,9 @@ spotSave.addEventListener('click', async () => {
       address: spotEditAddress.value.trim(),
       genre: spotEditGenre.value.trim(),
       intro: spotEditIntro.value.trim(),
+      official_url: spotEditOfficial.value.trim(),
+      instagram_url: spotEditInstagram.value.trim(),
+      reservation_url: spotEditReservation.value.trim(),
       facebook_url: spotEditFacebook.value.trim(),
       x_url: spotEditX.value.trim(),
       google_maps_url: spotEditGoogleMaps.value.trim(),
