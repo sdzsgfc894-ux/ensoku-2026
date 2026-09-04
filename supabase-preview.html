@@ -148,11 +148,133 @@
         grid-template-columns: 1fr;
       }
     }
+ .edit-button {
+  position: fixed;
+  top: 14px;
+  right: 16px;
+  z-index: 1000;
+
+  border: 1px solid #d8d8d0;
+  background: rgba(255,255,255,.92);
+  color: #30332d;
+
+  border-radius: 999px;
+  padding: 8px 14px;
+
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.login-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(30,32,28,.32);
+}
+
+.login-panel.open {
+  display: flex;
+}
+
+.login-box {
+  width: min(360px, calc(100% - 32px));
+  background: #fffefa;
+
+  border: 1px solid #ddd9cc;
+  border-radius: 18px;
+
+  padding: 24px;
+}
+
+.login-box h2 {
+  margin: 0 0 18px;
+  font-size: 20px;
+}
+
+.login-box input {
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 12px;
+
+  border: 1px solid #d6d5cd;
+  border-radius: 10px;
+
+  font: inherit;
+}
+
+.login-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.login-actions button {
+  flex: 1;
+  padding: 10px;
+
+  border-radius: 10px;
+  border: 1px solid #d6d5cd;
+
+  cursor: pointer;
+}
+
+#login-submit {
+  background: #262b24;
+  color: white;
+  border-color: #262b24;
+}
+
+#login-status {
+  min-height: 20px;
+  margin: 12px 0 0;
+
+  font-size: 12px;
+  color: #77786f;
+}
   </style>
 </head>
 
 <body>
+<button id="edit-button" class="edit-button" type="button">
+  編集
+</button>
 
+<div id="login-panel" class="login-panel">
+  <div class="login-box">
+    <h2>編集モード</h2>
+
+    <input
+      id="login-email"
+      type="email"
+      placeholder="メールアドレス"
+      autocomplete="username"
+    >
+
+    <input
+      id="login-password"
+      type="password"
+      placeholder="パスワード"
+      autocomplete="current-password"
+    >
+
+    <div class="login-actions">
+      <button id="login-cancel" type="button">
+        キャンセル
+      </button>
+
+      <button id="login-submit" type="button">
+        ログイン
+      </button>
+    </div>
+
+    <p id="login-status"></p>
+  </div>
+</div>
 <header>
   <h1>遠足候補 2026</h1>
   <p>Supabase preview</p>
@@ -384,7 +506,98 @@ async function loadSite() {
 
 
 loadSite();
+const editButton =
+  document.getElementById('edit-button');
 
+const loginPanel =
+  document.getElementById('login-panel');
+
+const loginCancel =
+  document.getElementById('login-cancel');
+
+const loginSubmit =
+  document.getElementById('login-submit');
+
+const loginEmail =
+  document.getElementById('login-email');
+
+const loginPassword =
+  document.getElementById('login-password');
+
+const loginStatus =
+  document.getElementById('login-status');
+
+
+editButton.addEventListener('click', async () => {
+
+  const {
+    data: { session }
+  } = await db.auth.getSession();
+
+  if (session) {
+    editButton.textContent = '編集中';
+    loginStatus.textContent =
+      'ログイン済みです。';
+    return;
+  }
+
+  loginPanel.classList.add('open');
+});
+
+
+loginCancel.addEventListener('click', () => {
+
+  loginPanel.classList.remove('open');
+  loginStatus.textContent = '';
+});
+
+
+loginSubmit.addEventListener('click', async () => {
+
+  const email =
+    loginEmail.value.trim();
+
+  const password =
+    loginPassword.value;
+
+  if (!email || !password) {
+    loginStatus.textContent =
+      'メールアドレスとパスワードを入力してください。';
+    return;
+  }
+
+  loginSubmit.disabled = true;
+  loginStatus.textContent =
+    'ログイン中...';
+
+  const {
+    data,
+    error
+  } = await db.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  loginSubmit.disabled = false;
+
+  if (error) {
+    loginStatus.textContent =
+      'ログインできませんでした：' +
+      error.message;
+    return;
+  }
+
+  if (data.session) {
+    loginStatus.textContent =
+      'ログインしました。';
+
+    editButton.textContent = '編集中';
+
+    setTimeout(() => {
+      loginPanel.classList.remove('open');
+    }, 500);
+  }
+});
 </script>
 
 </body>
