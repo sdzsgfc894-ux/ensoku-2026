@@ -399,6 +399,29 @@ body.is-editing .spot-edit-button {
       type="text"
     >
 
+    <label for="spot-edit-tel">
+     電話番号
+   </label>
+   <input
+     id="spot-edit-tel"
+     type="text"
+   >
+
+   <label for="spot-edit-hours">
+     営業時間
+   </label>
+   <textarea
+     id="spot-edit-hours"
+   ></textarea>
+
+   <label for="spot-edit-closed">
+     定休日
+   </label>
+   <input
+     id="spot-edit-closed"
+     type="text"
+   >
+    
     <label for="spot-edit-genre">
       ジャンル
     </label>
@@ -873,6 +896,15 @@ const spotEditName =
 const spotEditAddress =
   document.getElementById('spot-edit-address');
 
+const spotEditTel =
+  document.getElementById('spot-edit-tel');
+
+const spotEditHours =
+  document.getElementById('spot-edit-hours');
+
+const spotEditClosed =
+  document.getElementById('spot-edit-closed');
+  
 const spotEditGenre =
   document.getElementById('spot-edit-genre');
 
@@ -943,7 +975,7 @@ document.addEventListener('click', async (event) => {
     error
   } = await db
     .from('spots')
-    .select('id,name,address,genre,intro,official_url,instagram_url,reservation_url,facebook_url,x_url,google_maps_url,other_url')
+    .select('id,name,address,tel,hours,closed,genre,intro,official_url,instagram_url,reservation_url,facebook_url,x_url,google_maps_url,other_url')
     .eq('id', spotId)
     .single();
 
@@ -962,6 +994,15 @@ document.addEventListener('click', async (event) => {
   spotEditAddress.value =
     data.address ?? '';
 
+  spotEditTel.value =
+    data.tel ?? '';
+
+  spotEditHours.value =
+    data.hours ?? '';
+
+  spotEditClosed.value =
+    data.closed ?? '';
+  
   spotEditGenre.value =
     data.genre ?? '';
 
@@ -1014,6 +1055,9 @@ spotSave.addEventListener('click', async () => {
     .update({
       name: spotEditName.value.trim(),
       address: spotEditAddress.value.trim(),
+      tel: spotEditTel.value.trim(),
+      hours: spotEditHours.value.trim(),
+      closed: spotEditClosed.value.trim(),
       genre: spotEditGenre.value.trim(),
       intro: spotEditIntro.value.trim(),
       official_url: spotEditOfficial.value.trim(),
