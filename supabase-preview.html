@@ -852,6 +852,45 @@ spotCancel.addEventListener('click', () => {
   spotEditor.classList.remove('open');
   spotEditStatus.textContent = '';
 });
+spotSave.addEventListener('click', async () => {
+
+  spotEditStatus.textContent =
+    '保存中...';
+
+  spotSave.disabled = true;
+
+  const {
+    error
+  } = await db
+    .from('spots')
+    .update({
+      name: spotEditName.value.trim(),
+      address: spotEditAddress.value.trim(),
+      genre: spotEditGenre.value.trim(),
+      intro: spotEditIntro.value.trim(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', spotEditId.value);
+
+  if (error) {
+    spotEditStatus.textContent =
+      '保存エラー：' + error.message;
+
+    spotSave.disabled = false;
+    return;
+  }
+
+  spotEditStatus.textContent =
+    '保存しました';
+
+  await loadSite();
+
+  setTimeout(() => {
+    spotEditor.classList.remove('open');
+    spotEditStatus.textContent = '';
+    spotSave.disabled = false;
+  }, 500);
+});
 </script>
 
 </body>
