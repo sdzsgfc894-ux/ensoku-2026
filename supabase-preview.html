@@ -418,6 +418,14 @@ body.is-editing .spot-add-button {
       type="text"
     >
 
+    <label for="spot-edit-course">
+      追加先コース
+    </label>
+
+    <select id="spot-edit-course">
+      <option value="">未選択</option>
+    </select>
+    
     <label for="spot-edit-address">
       住所
     </label>
@@ -1003,6 +1011,9 @@ const spotEditId =
 const spotEditName =
   document.getElementById('spot-edit-name');
 
+const spotEditCourse =
+  document.getElementById('spot-edit-course');
+  
 const spotEditAddress =
   document.getElementById('spot-edit-address');
 
@@ -1168,9 +1179,26 @@ document.addEventListener('click', async (event) => {
 
   spotEditor.classList.add('open');
 });
-spotAddButton.addEventListener('click', () => {
+spotAddButton.addEventListener('click', async () => {
 
   editingSpotId = null;
+
+  const { data: courseList, error: courseError } = await db
+  .from('public_courses')
+  .select('id,name')
+  .order('sort_order');
+
+if (courseError) {
+  spotEditStatus.textContent =
+    'コース読み込みエラー：' + courseError.message;
+  return;
+}
+
+spotEditCourse.innerHTML =
+  '<option value="">未選択</option>' +
+  courseList.map(course =>
+    `<option value="${course.id}">${escapeHTML(course.name)}</option>`
+  ).join('');
 
   spotEditName.value = '';
   spotEditAddress.value = '';
@@ -1247,16 +1275,31 @@ spotSave.addEventListener('click', async () => {
 
   } else {
 
-    const result = await db
-      .from('spots')
+  const result = await db
+    .from('spots')
+    .insert({
+      ...spotPayload,
+      created_at: new Date().toISOString()
+    })
+    .select('id')
+    .single();
+
+  error = result.error;
+
+  if (!error && spotEditCourse.value) {
+
+    const courseSpotResult = await db
+      .from('course_spots')
       .insert({
-        ...spotPayload,
-        created_at: new Date().toISOString()
+        course_id: spotEditCourse.value,
+        spot_id: result.data.id,
+        sort_order: 999,
+        route_included: true
       });
 
-    error = result.error;
+    error = courseSpotResult.error;
   }
-
+}
   if (error) {
 
     spotEditStatus.textContent =
