@@ -911,7 +911,8 @@ const spotEditStatus =
 
 
 document.addEventListener('click', async (event) => {
-
+console.log('click', event.target);
+  
   const button =
     event.target.closest('.spot-edit-button');
 
