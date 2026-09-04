@@ -254,6 +254,84 @@
 body.is-editing .spot-edit-button {
   display: inline-block;
 }
+.spot-editor {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(30,32,28,.32);
+}
+
+.spot-editor.open {
+  display: flex;
+}
+
+.spot-editor-box {
+  width: min(520px, calc(100% - 32px));
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+
+  background: #fffefa;
+  border: 1px solid #ddd9cc;
+  border-radius: 18px;
+
+  padding: 24px;
+}
+
+.spot-editor-box h2 {
+  margin: 0 0 18px;
+  font-size: 20px;
+}
+
+.spot-editor-box label {
+  display: block;
+  margin: 14px 0 5px;
+
+  font-size: 12px;
+  color: #696c63;
+}
+
+.spot-editor-box input,
+.spot-editor-box textarea {
+  width: 100%;
+  padding: 11px 12px;
+
+  border: 1px solid #d6d5cd;
+  border-radius: 10px;
+
+  font: inherit;
+  background: white;
+}
+
+.spot-editor-box textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.spot-editor-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.spot-editor-actions button {
+  flex: 1;
+  padding: 10px;
+
+  border-radius: 10px;
+  border: 1px solid #d6d5cd;
+  cursor: pointer;
+}
+
+#spot-save {
+  background: #262b24;
+  color: white;
+  border-color: #262b24;
+} 
   </style>
 </head>
 
@@ -293,6 +371,71 @@ body.is-editing .spot-edit-button {
     <p id="login-status"></p>
   </div>
 </div>
+<div id="spot-editor" class="spot-editor">
+  <div class="spot-editor-box">
+
+    <h2>スポット編集</h2>
+
+    <input
+      id="spot-edit-id"
+      type="hidden"
+    >
+
+    <label for="spot-edit-name">
+      名前
+    </label>
+
+    <input
+      id="spot-edit-name"
+      type="text"
+    >
+
+    <label for="spot-edit-address">
+      住所
+    </label>
+
+    <input
+      id="spot-edit-address"
+      type="text"
+    >
+
+    <label for="spot-edit-genre">
+      ジャンル
+    </label>
+
+    <input
+      id="spot-edit-genre"
+      type="text"
+    >
+
+    <label for="spot-edit-intro">
+      紹介文
+    </label>
+
+    <textarea
+      id="spot-edit-intro"
+    ></textarea>
+
+    <div class="spot-editor-actions">
+
+      <button
+        id="spot-cancel"
+        type="button">
+        キャンセル
+      </button>
+
+      <button
+        id="spot-save"
+        type="button">
+        保存
+      </button>
+
+    </div>
+
+    <p id="spot-edit-status"></p>
+
+  </div>
+</div>  
 <header>
   <h1>遠足候補 2026</h1>
   <p>Supabase preview</p>
@@ -624,6 +767,88 @@ loginSubmit.addEventListener('click', async () => {
       loginPanel.classList.remove('open');
     }, 500);
   }
+});
+const spotEditor =
+  document.getElementById('spot-editor');
+
+const spotEditId =
+  document.getElementById('spot-edit-id');
+
+const spotEditName =
+  document.getElementById('spot-edit-name');
+
+const spotEditAddress =
+  document.getElementById('spot-edit-address');
+
+const spotEditGenre =
+  document.getElementById('spot-edit-genre');
+
+const spotEditIntro =
+  document.getElementById('spot-edit-intro');
+
+const spotCancel =
+  document.getElementById('spot-cancel');
+
+const spotSave =
+  document.getElementById('spot-save');
+
+const spotEditStatus =
+  document.getElementById('spot-edit-status');
+
+
+document.addEventListener('click', async (event) => {
+
+  const button =
+    event.target.closest('.spot-edit-button');
+
+  if (!button) return;
+
+  const spotId =
+    button.dataset.spotId;
+
+  spotEditStatus.textContent =
+    '読み込み中...';
+
+  const {
+    data,
+    error
+  } = await db
+    .from('spots')
+    .select('id,name,address,genre,intro')
+    .eq('id', spotId)
+    .single();
+
+  if (error) {
+    spotEditStatus.textContent =
+      '読み込みエラー：' + error.message;
+    return;
+  }
+
+  spotEditId.value =
+    data.id;
+
+  spotEditName.value =
+    data.name ?? '';
+
+  spotEditAddress.value =
+    data.address ?? '';
+
+  spotEditGenre.value =
+    data.genre ?? '';
+
+  spotEditIntro.value =
+    data.intro ?? '';
+
+  spotEditStatus.textContent = '';
+
+  spotEditor.classList.add('open');
+});
+
+
+spotCancel.addEventListener('click', () => {
+
+  spotEditor.classList.remove('open');
+  spotEditStatus.textContent = '';
 });
 </script>
 
