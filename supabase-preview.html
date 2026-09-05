@@ -2135,6 +2135,61 @@ if (courseListError) {
 }
 
 console.log(courseList);
+
+const currentIndex =
+  courseList.findIndex(item => item.id === courseId);
+
+if (currentIndex === -1) return;
+
+const targetIndex =
+  direction === 'up'
+    ? currentIndex - 1
+    : currentIndex + 1;
+
+if (
+  targetIndex < 0 ||
+  targetIndex >= courseList.length
+) {
+  return;
+}
+
+const currentCourse =
+  courseList[currentIndex];
+
+const targetCourse =
+  courseList[targetIndex];
+
+const currentOrder =
+  currentCourse.sort_order;
+
+const targetOrder =
+  targetCourse.sort_order;
+
+const firstUpdate = await db
+  .from('courses')
+  .update({
+    sort_order: targetOrder
+  })
+  .eq('id', currentCourse.id);
+
+if (firstUpdate.error) {
+  console.error(firstUpdate.error);
+  return;
+}
+
+const secondUpdate = await db
+  .from('courses')
+  .update({
+    sort_order: currentOrder
+  })
+  .eq('id', targetCourse.id);
+
+if (secondUpdate.error) {
+  console.error(secondUpdate.error);
+  return;
+}
+
+await loadSite();
   
   console.log({
     courseId,
