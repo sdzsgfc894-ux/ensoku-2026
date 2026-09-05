@@ -517,16 +517,7 @@ body.is-editing .area-order-buttons {
   cursor: pointer;
   font-size: 14px;
 }
-
-.area-heading.is-dragging {
-  opacity: 0.55;
-}
-
-.area-heading.is-drop-target {
-  outline: 2px dashed #8f9487;
-  outline-offset: 6px;
-}
-    
+  
   </style>
 </head>
 
@@ -1356,7 +1347,6 @@ if (unassignedSpots.length > 0) {
   return `
     <div
   class="area-heading"
-  draggable="true"
   data-area-id="${area.id}">
 
       <h2 class="area-title">
@@ -2760,123 +2750,6 @@ if (secondUpdate.error) {
 }
 
 await loadSite();  
-});
-
-document.addEventListener('dragstart', (event) => {
-
-  const area =
-    event.target.closest('.area-heading');
-
-  if (!area) return;
-
-  area.classList.add('is-dragging');
-});
-
-document.addEventListener('dragend', (event) => {
-
-  const area =
-    event.target.closest('.area-heading');
-
-  if (!area) return;
-
-  area.classList.remove('is-dragging');
-
-  document
-    .querySelectorAll('.area-heading.is-drop-target')
-    .forEach(item => {
-      item.classList.remove('is-drop-target');
-    });
-});
-
-document.addEventListener('dragover', (event) => {
-
-  const targetArea =
-    event.target.closest('.area-heading');
-
-  const draggingArea =
-    document.querySelector('.area-heading.is-dragging');
-
-  if (!targetArea || !draggingArea) return;
-
-  if (targetArea === draggingArea) return;
-
-  event.preventDefault();
-
-  document
-    .querySelectorAll('.area-heading.is-drop-target')
-    .forEach(item => {
-      item.classList.remove('is-drop-target');
-    });
-
-  targetArea.classList.add('is-drop-target');
-});
-
-document.addEventListener('drop', async (event) => {
-
-  const targetArea =
-    event.target.closest('.area-heading');
-
-  const draggingArea =
-    document.querySelector('.area-heading.is-dragging');
-
-  if (!targetArea || !draggingArea) return;
-
-  if (targetArea === draggingArea) return;
-
-  event.preventDefault();
-
-  const parent =
-    targetArea.parentElement;
-
-  const areas =
-    Array.from(
-      parent.querySelectorAll('.area-heading')
-    );
-
-  const draggingIndex =
-    areas.indexOf(draggingArea);
-
-  const targetIndex =
-    areas.indexOf(targetArea);
-
-  if (draggingIndex < targetIndex) {
-
-    parent.insertBefore(
-      draggingArea,
-      targetArea.nextSibling
-    );
-
-  } else {
-
-    parent.insertBefore(
-      draggingArea,
-      targetArea
-    );
-  }
-
-const orderedAreas =
-  Array.from(
-    parent.querySelectorAll('.area-heading')
-  );
-
-for (let i = 0; i < orderedAreas.length; i++) {
-
-  const area = orderedAreas[i];
-
-  const result = await db
-    .from('areas')
-    .update({
-      sort_order: i + 1
-    })
-    .eq('id', area.dataset.areaId);
-
-  if (result.error) {
-    console.error(result.error);
-    break;
-  }
-}
-  
-  targetArea.classList.remove('is-drop-target');
 });
 
 areaDelete.addEventListener('click', async () => {
