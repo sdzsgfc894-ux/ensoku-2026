@@ -550,6 +550,31 @@ body.is-editing .spot-assign-button {
   font-weight: 600;
   cursor: pointer;
 }
+
+.search-box {
+  max-width: 720px;
+  margin: 0 auto 28px;
+  padding: 0 20px;
+}
+
+#spot-search {
+  width: 100%;
+  padding: 11px 14px;
+
+  border: 1px solid #d6d5cd;
+  border-radius: 999px;
+
+  background: #fffefa;
+  color: #30332d;
+
+  font: inherit;
+  font-size: 13px;
+}
+
+#spot-search:focus {
+  outline: none;
+  border-color: #9da095;
+}
     
   </style>
 </head>
@@ -969,6 +994,14 @@ body.is-editing .spot-assign-button {
   <p>Supabase preview</p>
 </header>
 
+<div class="search-box">
+  <input
+    id="spot-search"
+    type="search"
+    placeholder="スポットを検索"
+  >
+</div>
+  
 <main>
   <div id="status">Supabaseから読み込み中...</div>
   <div id="app"></div>
@@ -1002,6 +1035,7 @@ async function loadSite() {
 
   const status = document.getElementById('status');
   const app = document.getElementById('app');
+  const spotSearch = document.getElementById('spot-search');
 
   try {
 
@@ -3060,6 +3094,79 @@ spotRemoveFromCourse.addEventListener('click', async () => {
     spotRemoveFromCourse.disabled = false;
     editingCourseSpotCourseId = null;
   }, 500);
+});
+
+spotSearch.addEventListener('input', () => {
+
+  const keyword =
+    spotSearch.value.trim().toLowerCase();
+
+  document
+    .querySelectorAll('.spot')
+    .forEach(card => {
+
+      const text =
+        card.textContent.toLowerCase();
+
+      card.style.display =
+        !keyword || text.includes(keyword)
+          ? ''
+          : 'none';
+    });
+
+document
+  .querySelectorAll('.course')
+  .forEach(course => {
+
+    const visibleSpots =
+      Array.from(
+        course.querySelectorAll('.spot')
+      ).some(card => card.style.display !== 'none');
+
+    course.style.display =
+      !keyword || visibleSpots
+        ? ''
+        : 'none';
+  });
+
+document
+  .querySelectorAll('.area-heading')
+  .forEach(areaHeading => {
+
+    const nextCourses = [];
+
+    let node = areaHeading.nextElementSibling;
+
+    while (
+      node &&
+      !node.classList.contains('area-heading')
+    ) {
+      if (node.classList.contains('course')) {
+        nextCourses.push(node);
+      }
+
+      node = node.nextElementSibling;
+    }
+
+    const hasVisibleCourse =
+      nextCourses.some(
+        course => course.style.display !== 'none'
+      );
+
+    areaHeading.style.display =
+      !keyword || hasVisibleCourse
+        ? ''
+        : 'none';
+  });
+
+if (!keyword) {
+  document
+    .querySelectorAll('.spot, .course, .area-heading')
+    .forEach(element => {
+      element.style.display = '';
+    });
+}
+  
 });
   
 </script>
