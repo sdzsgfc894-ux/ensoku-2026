@@ -380,6 +380,15 @@ body.is-editing .spot-order-buttons {
   font-size: 14px;
 }
   
+ .spot.is-dragging {
+  opacity: 0.55;
+}
+
+.spot.is-drop-target {
+  outline: 2px dashed #8f9487;
+  outline-offset: 4px;
+}
+  
   </style>
 </head>
 
@@ -779,7 +788,11 @@ async function loadSite() {
          }
 
             return `
-              <article class="spot">
+             <article
+                class="spot"
+                draggable="true"
+                data-course-id="${course.id}"
+                data-spot-id="${spot.id}">
 
                 <div class="spot-order">
                   STOP ${String(index + 1).padStart(2, '0')}
@@ -1461,6 +1474,94 @@ await loadSite();
   });
 });
 
+document.addEventListener('dragstart', (event) => {
+
+  const card =
+    event.target.closest('.spot');
+
+  if (!card) return;
+
+  card.classList.add('is-dragging');
+});
+
+document.addEventListener('dragend', (event) => {
+
+  const card =
+    event.target.closest('.spot');
+
+  if (!card) return;
+
+  card.classList.remove('is-dragging');
+
+  document
+    .querySelectorAll('.spot.is-drop-target')
+    .forEach(item => {
+      item.classList.remove('is-drop-target');
+    });
+});
+
+document.addEventListener('dragover', (event) => {
+
+  const targetCard =
+    event.target.closest('.spot');
+
+  const draggingCard =
+    document.querySelector('.spot.is-dragging');
+
+  if (!targetCard || !draggingCard) return;
+
+  if (targetCard === draggingCard) return;
+
+  if (
+    targetCard.dataset.courseId !==
+    draggingCard.dataset.courseId
+  ) {
+    return;
+  }
+
+  event.preventDefault();
+
+  document
+    .querySelectorAll('.spot.is-drop-target')
+    .forEach(item => {
+      item.classList.remove('is-drop-target');
+    });
+
+  targetCard.classList.add('is-drop-target');
+});
+
+document.addEventListener('drop', (event) => {
+
+  const targetCard =
+    event.target.closest('.spot');
+
+  const draggingCard =
+    document.querySelector('.spot.is-dragging');
+
+  if (!targetCard || !draggingCard) return;
+
+  if (targetCard === draggingCard) return;
+
+  if (
+    targetCard.dataset.courseId !==
+    draggingCard.dataset.courseId
+  ) {
+    return;
+  }
+
+  event.preventDefault();
+
+  const parent =
+    targetCard.parentElement;
+
+  parent.insertBefore(
+    draggingCard,
+    targetCard
+  );
+
+  targetCard.classList.remove('is-drop-target');
+});  
+  
 </script>
 
 </body>
