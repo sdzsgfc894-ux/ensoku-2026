@@ -2625,7 +2625,6 @@ console.log(areaList);
     areaId,
     direction
   });
-});
 
 const currentIndex =
   areaList.findIndex(item => item.id === areaId);
@@ -2680,7 +2679,8 @@ if (secondUpdate.error) {
   return;
 }
 
-await loadSite();
+await loadSite();  
+});
   
 </script>
 
