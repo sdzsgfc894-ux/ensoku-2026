@@ -1858,7 +1858,8 @@ courseEditArea.innerHTML =
   '<option value="">未選択</option>' +
   areaList.map(area =>
     `<option value="${area.id}">${escapeHTML(area.name)}</option>`
-  ).join('');
+  ).join('') +
+  '<option value="__new__">＋ 新しいエリア</option>';
   
   courseEditName.value = '';
   courseEditAnnotation.value = '';
