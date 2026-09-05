@@ -517,6 +517,15 @@ body.is-editing .area-order-buttons {
   cursor: pointer;
   font-size: 14px;
 }
+
+.area-heading.is-dragging {
+  opacity: 0.55;
+}
+
+.area-heading.is-drop-target {
+  outline: 2px dashed #8f9487;
+  outline-offset: 6px;
+}
     
   </style>
 </head>
@@ -878,6 +887,12 @@ body.is-editing .area-order-buttons {
         保存
       </button>
 
+<button
+  id="area-delete"
+  type="button">
+  エリアを削除
+</button>
+      
     </div>
 
     <p id="area-edit-status"></p>
@@ -973,7 +988,14 @@ const [
     const spots = spotsResult.data;
     const courseSpots = linksResult.data;
 
+    const assignedSpotIds = new Set(
+      courseSpots.map(item => item.spot_id)
+    );
 
+    const unassignedSpots = spots.filter(
+      spot => !assignedSpotIds.has(spot.id)
+    );
+    
     const spotMap = new Map(
       spots.map(spot => [spot.id, spot])
     );
@@ -1217,6 +1239,60 @@ app.innerHTML = areas.map(area => {
       }
     ).join('');
 
+if (unassignedSpots.length > 0) {
+
+  app.innerHTML += `
+    <div class="area-heading">
+      <h2 class="area-title">
+        未分類
+      </h2>
+    </div>
+
+    <div class="spots">
+
+      ${unassignedSpots.map(spot => `
+        <article
+          class="spot"
+          data-spot-id="${spot.id}">
+
+          <div class="spot-order">
+            UNASSIGNED
+          </div>
+
+          <h3>
+            ${escapeHTML(spot.name)}
+          </h3>
+
+          ${
+            spot.genre
+              ? `<div class="genre">
+                   ${escapeHTML(spot.genre)}
+                 </div>`
+              : ''
+          }
+
+          ${
+            spot.address
+              ? `<p class="address">
+                   ${escapeHTML(spot.address)}
+                 </p>`
+              : ''
+          }
+
+          <button
+            class="spot-edit-button"
+            type="button"
+            data-spot-id="${spot.id}">
+            編集
+          </button>
+
+        </article>
+      `).join('')}
+
+    </div>
+  `;
+}
+    
     return `
       <section
         class="course"
@@ -1279,8 +1355,9 @@ app.innerHTML = areas.map(area => {
 
   return `
     <div
-      class="area-heading"
-      data-area-id="${area.id}">
+  class="area-heading"
+  draggable="true"
+  data-area-id="${area.id}">
 
       <h2 class="area-title">
         ${escapeHTML(area.name)}
@@ -1575,6 +1652,9 @@ const areaCancel =
 const areaSave =
   document.getElementById('area-save');
 
+const areaDelete =
+  document.getElementById('area-delete');
+  
 const areaEditStatus =
   document.getElementById('area-edit-status');
   
@@ -2680,6 +2760,165 @@ if (secondUpdate.error) {
 }
 
 await loadSite();  
+});
+
+document.addEventListener('dragstart', (event) => {
+
+  const area =
+    event.target.closest('.area-heading');
+
+  if (!area) return;
+
+  area.classList.add('is-dragging');
+});
+
+document.addEventListener('dragend', (event) => {
+
+  const area =
+    event.target.closest('.area-heading');
+
+  if (!area) return;
+
+  area.classList.remove('is-dragging');
+
+  document
+    .querySelectorAll('.area-heading.is-drop-target')
+    .forEach(item => {
+      item.classList.remove('is-drop-target');
+    });
+});
+
+document.addEventListener('dragover', (event) => {
+
+  const targetArea =
+    event.target.closest('.area-heading');
+
+  const draggingArea =
+    document.querySelector('.area-heading.is-dragging');
+
+  if (!targetArea || !draggingArea) return;
+
+  if (targetArea === draggingArea) return;
+
+  event.preventDefault();
+
+  document
+    .querySelectorAll('.area-heading.is-drop-target')
+    .forEach(item => {
+      item.classList.remove('is-drop-target');
+    });
+
+  targetArea.classList.add('is-drop-target');
+});
+
+document.addEventListener('drop', async (event) => {
+
+  const targetArea =
+    event.target.closest('.area-heading');
+
+  const draggingArea =
+    document.querySelector('.area-heading.is-dragging');
+
+  if (!targetArea || !draggingArea) return;
+
+  if (targetArea === draggingArea) return;
+
+  event.preventDefault();
+
+  const parent =
+    targetArea.parentElement;
+
+  const areas =
+    Array.from(
+      parent.querySelectorAll('.area-heading')
+    );
+
+  const draggingIndex =
+    areas.indexOf(draggingArea);
+
+  const targetIndex =
+    areas.indexOf(targetArea);
+
+  if (draggingIndex < targetIndex) {
+
+    parent.insertBefore(
+      draggingArea,
+      targetArea.nextSibling
+    );
+
+  } else {
+
+    parent.insertBefore(
+      draggingArea,
+      targetArea
+    );
+  }
+
+const orderedAreas =
+  Array.from(
+    parent.querySelectorAll('.area-heading')
+  );
+
+for (let i = 0; i < orderedAreas.length; i++) {
+
+  const area = orderedAreas[i];
+
+  const result = await db
+    .from('areas')
+    .update({
+      sort_order: i + 1
+    })
+    .eq('id', area.dataset.areaId);
+
+  if (result.error) {
+    console.error(result.error);
+    break;
+  }
+}
+  
+  targetArea.classList.remove('is-drop-target');
+});
+
+areaDelete.addEventListener('click', async () => {
+
+  if (!areaEditId.value) return;
+
+  const confirmed =
+    confirm('このエリアを削除しますか？');
+
+  if (!confirmed) return;
+
+  areaEditStatus.textContent =
+    '削除中...';
+
+  areaDelete.disabled = true;
+
+  const { error } = await db
+    .from('areas')
+    .update({
+      deleted_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', areaEditId.value);
+
+  if (error) {
+    areaEditStatus.textContent =
+      '削除エラー：' + error.message;
+
+    areaDelete.disabled = false;
+    return;
+  }
+
+  areaEditStatus.textContent =
+    '削除しました';
+
+  await loadSite();
+
+  setTimeout(() => {
+    areaEditor.classList.remove('open');
+    areaEditStatus.textContent = '';
+    areaDelete.disabled = false;
+  }, 500);
 });
   
 </script>
