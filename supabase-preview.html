@@ -494,6 +494,29 @@ body.is-editing .course-order-buttons {
 body.is-editing .area-edit-button {
   display: inline-block;
 }
+
+.area-order-buttons {
+  display: none;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+body.is-editing .area-order-buttons {
+  display: inline-flex;
+}
+
+.area-order-buttons button {
+  width: 34px;
+  height: 30px;
+
+  border: 1px solid #d6d5cd;
+  background: #f8f7f1;
+  color: #30332d;
+
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 14px;
+}
     
   </style>
 </head>
@@ -1269,6 +1292,24 @@ app.innerHTML = areas.map(area => {
         data-area-id="${area.id}">
         エリア編集
       </button>
+
+   <div class="area-order-buttons">
+
+     <button
+       class="area-move-up"
+       type="button"
+       data-area-id="${area.id}">
+       ↑
+     </button>
+
+     <button
+       class="area-move-down"
+       type="button"
+       data-area-id="${area.id}">
+       ↓
+     </button>
+
+</div>
 
     </div>
 
@@ -2551,6 +2592,95 @@ areaSave.addEventListener('click', async () => {
     areaSave.disabled = false;
   }, 500);
 });
+
+document.addEventListener('click', async (event) => {
+
+  const moveButton =
+    event.target.closest('.area-move-up, .area-move-down');
+
+  if (!moveButton) return;
+
+  const areaId =
+    moveButton.dataset.areaId;
+
+  const direction =
+    moveButton.classList.contains('area-move-up')
+      ? 'up'
+      : 'down';
+
+const { data: areaList, error: areaListError } = await db
+  .from('areas')
+  .select('id,sort_order')
+  .is('deleted_at', null)
+  .order('sort_order');
+
+if (areaListError) {
+  console.error(areaListError);
+  return;
+}
+
+console.log(areaList);
+  
+  console.log({
+    areaId,
+    direction
+  });
+});
+
+const currentIndex =
+  areaList.findIndex(item => item.id === areaId);
+
+if (currentIndex === -1) return;
+
+const targetIndex =
+  direction === 'up'
+    ? currentIndex - 1
+    : currentIndex + 1;
+
+if (
+  targetIndex < 0 ||
+  targetIndex >= areaList.length
+) {
+  return;
+}
+
+const currentArea =
+  areaList[currentIndex];
+
+const targetArea =
+  areaList[targetIndex];
+
+const currentOrder =
+  currentArea.sort_order;
+
+const targetOrder =
+  targetArea.sort_order;
+
+const firstUpdate = await db
+  .from('areas')
+  .update({
+    sort_order: targetOrder
+  })
+  .eq('id', currentArea.id);
+
+if (firstUpdate.error) {
+  console.error(firstUpdate.error);
+  return;
+}
+
+const secondUpdate = await db
+  .from('areas')
+  .update({
+    sort_order: currentOrder
+  })
+  .eq('id', targetArea.id);
+
+if (secondUpdate.error) {
+  console.error(secondUpdate.error);
+  return;
+}
+
+await loadSite();
   
 </script>
 
