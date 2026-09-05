@@ -101,6 +101,22 @@
       border-radius: 12px;
       margin-bottom: 12px;
     }
+
+    #spot-photo-list {
+  display: grid;
+  grid-template-columns:
+    repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.spot-photo-item img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  border-radius: 8px;
+}
     
     .spot h3 {
       margin: 8px 0 12px;
@@ -750,8 +766,10 @@ body.is-editing .spot-assign-button {
       <input
         id="spot-photo-file"
         type="file"
-        accept="image/*"
-      >
+        accept="image/*" >
+
+      <div id="spot-photo-list"></div>
+      
     </div>
     
 <label for="spot-edit-official">
@@ -1758,6 +1776,9 @@ const spotSave =
 const spotPhotoFile =
   document.getElementById('spot-photo-file');  
 
+const spotPhotoList =
+  document.getElementById('spot-photo-list');
+
 const spotRemoveFromCourse =
   document.getElementById('spot-remove-from-course');
 
@@ -1895,6 +1916,48 @@ spotRemoveFromCourse.style.display =
       '読み込みエラー：' + error.message;
     return;
   }
+
+  const { data: existingPhotos, error: photoLoadError } =
+  await db
+    .from('spot_photos')
+    .select('id, storage_path, sort_order, is_primary, alt_text')
+    .eq('spot_id', editingSpotId)
+    .order('sort_order');
+
+if (photoLoadError) {
+  spotEditStatus.textContent =
+    '写真読み込みエラー：' + photoLoadError.message;
+  return;
+}
+
+spotPhotoList.innerHTML =
+  (existingPhotos || []).map(photo => {
+
+    const { data } =
+      db.storage
+        .from('spot-photos')
+        .getPublicUrl(photo.storage_path);
+
+    return `
+  <div
+    class="spot-photo-item"
+    data-photo-id="${photo.id}"
+  >
+    <img
+      src="${escapeHTML(data.publicUrl)}"
+      alt="${escapeHTML(photo.alt_text || '')}"
+    >
+
+    <button
+      type="button"
+      class="photo-primary-button"
+      data-photo-id="${photo.id}"
+    >
+      ${photo.is_primary ? '代表写真' : '代表にする'}
+    </button>
+  </div>
+`;
+  }).join('');
 
   spotEditId.value =
     data.id;
@@ -2234,6 +2297,48 @@ await loadSite();
   });
 });
 
+document.addEventListener('click', async (event) => {
+
+  const button =
+    event.target.closest('.photo-primary-button');
+
+  if (!button) return;
+
+  const photoId =
+    button.dataset.photoId;
+
+  if (!editingSpotId) return;
+
+  const { error: resetError } =
+    await db
+      .from('spot_photos')
+      .update({ is_primary: false })
+      .eq('spot_id', editingSpotId);
+
+  if (resetError) {
+    spotEditStatus.textContent =
+      '代表写真の更新エラー：' + resetError.message;
+    return;
+  }
+
+  const { error: primaryError } =
+    await db
+      .from('spot_photos')
+      .update({ is_primary: true })
+      .eq('id', photoId);
+
+  if (primaryError) {
+    spotEditStatus.textContent =
+      '代表写真の更新エラー：' + primaryError.message;
+    return;
+  }
+
+  spotEditStatus.textContent =
+    '代表写真を変更しました';
+
+  await loadSite();
+});
+  
 document.addEventListener('dragstart', (event) => {
 
   const card =
