@@ -407,6 +407,31 @@ body.is-editing .course-edit-button {
   display: inline-block;
 }
     
+.course-add-button {
+  display: none;
+
+  position: fixed;
+  top: 18px;
+  right: 220px;
+  z-index: 2500;
+
+  padding: 9px 14px;
+
+  border: 1px solid #d6d5cd;
+  background: #fffefa;
+  color: #30332d;
+
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+
+  box-shadow: 0 3px 12px rgba(0,0,0,.08);
+}
+
+body.is-editing .course-add-button {
+  display: inline-block;
+}  
+  
   </style>
 </head>
 
@@ -418,6 +443,10 @@ body.is-editing .course-edit-button {
 <button id="spot-add-button" class="spot-add-button" type="button">
   ＋ スポット追加
 </button>
+
+<button id="course-add-button" class="course-add-button" type="button">
+  ＋ コース追加
+</button>  
   
 <div id="login-panel" class="login-panel">
   <div class="login-box">
@@ -1229,6 +1258,9 @@ const spotEditStatus =
 
 let editingCourseId = null;
   
+const courseAddButton =
+  document.getElementById('course-add-button');
+  
 const courseEditor =
   document.getElementById('course-editor');
 
@@ -1785,6 +1817,21 @@ courseEditPrivateMemo.value =
   courseEditStatus.textContent = '';
 });
 
+courseAddButton.addEventListener('click', () => {
+
+  editingCourseId = null;
+
+  courseEditName.value = '';
+  courseEditAnnotation.value = '';
+  courseEditPlannedDate.value = '';
+  courseEditDepartureTime.value = '';
+  courseEditPrivateMemo.value = '';
+
+  courseEditStatus.textContent = '';
+
+  courseEditor.classList.add('open');
+});
+  
 courseCancel.addEventListener('click', () => {
 
   courseEditor.classList.remove('open');
@@ -1796,17 +1843,37 @@ courseSave.addEventListener('click', async () => {
   courseEditStatus.textContent = '保存中...';
   courseSave.disabled = true;
 
-  const { error } = await db
-    .from('courses')
-    .update({
+const coursePayload = {
   name: courseEditName.value.trim(),
   annotation: courseEditAnnotation.value.trim(),
   planned_date: courseEditPlannedDate.value || null,
   departure_time: courseEditDepartureTime.value || null,
   private_memo: courseEditPrivateMemo.value.trim(),
   updated_at: new Date().toISOString()
-})
-    .eq('id', courseEditId.value);
+};
+
+let error;
+
+if (editingCourseId) {
+
+  const result = await db
+    .from('courses')
+    .update(coursePayload)
+    .eq('id', editingCourseId);
+
+  error = result.error;
+
+} else {
+
+  const result = await db
+    .from('courses')
+    .insert({
+      ...coursePayload,
+      created_at: new Date().toISOString()
+    });
+
+  error = result.error;
+}
 
   if (error) {
     courseEditStatus.textContent =
