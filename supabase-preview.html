@@ -2004,6 +2004,8 @@ courseEditArea.addEventListener('change', () => {
 
 courseDelete.addEventListener('click', async () => {
 
+console.log('course delete clicked', editingCourseId);
+  
   if (!editingCourseId) return;
 
   const confirmed =
