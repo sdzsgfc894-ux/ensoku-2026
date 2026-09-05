@@ -2258,7 +2258,7 @@ document.addEventListener('dragover', (event) => {
   targetCourse.classList.add('is-drop-target');
 });
 
-document.addEventListener('drop', (event) => {
+document.addEventListener('drop', async (event) => {
 
   const targetCourse =
     event.target.closest('.course');
@@ -2299,6 +2299,28 @@ document.addEventListener('drop', (event) => {
     );
   }
 
+const orderedCourses =
+  Array.from(
+    parent.querySelectorAll('.course')
+  );
+
+for (let i = 0; i < orderedCourses.length; i++) {
+
+  const course = orderedCourses[i];
+
+  const result = await db
+    .from('courses')
+    .update({
+      sort_order: i + 1
+    })
+    .eq('id', course.dataset.courseId);
+
+  if (result.error) {
+    console.error(result.error);
+    break;
+  }
+}
+  
   targetCourse.classList.remove('is-drop-target');
 });
   
