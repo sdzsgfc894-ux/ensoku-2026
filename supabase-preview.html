@@ -1365,6 +1365,32 @@ spotSave.addEventListener('click', async () => {
 
   }, 500);
 });
+
+document.addEventListener('click', async (event) => {
+
+  const moveButton =
+    event.target.closest('.spot-move-up, .spot-move-down');
+
+  if (!moveButton) return;
+
+  const courseId =
+    moveButton.dataset.courseId;
+
+  const spotId =
+    moveButton.dataset.spotId;
+
+  const direction =
+    moveButton.classList.contains('spot-move-up')
+      ? 'up'
+      : 'down';
+
+  console.log({
+    courseId,
+    spotId,
+    direction
+  });
+});
+
 </script>
 
 </body>
