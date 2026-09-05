@@ -1868,9 +1868,8 @@ courseAddButton.addEventListener('click', async () => {
 const { data: areaList, error: areaError } = await db
   .from('areas')
   .select('id,name')
-  .ilike('name', newAreaName)
   .is('deleted_at', null)
-  .limit(1);
+  .order('sort_order');
 
 if (areaError) {
   courseEditStatus.textContent =
