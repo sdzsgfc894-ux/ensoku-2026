@@ -2006,7 +2006,7 @@ courseDelete.addEventListener('click', async () => {
 
 console.log('course delete clicked', editingCourseId);
   
-  if (!editingCourseId) return;
+  if (!courseEditId.value) return;
 
   const confirmed =
     confirm('このコースを削除しますか？');
@@ -2024,7 +2024,7 @@ console.log('course delete clicked', editingCourseId);
       deleted_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     })
-    .eq('id', editingCourseId);
+    .eq('id', courseEditId.value);
 
   if (error) {
     courseEditStatus.textContent =
