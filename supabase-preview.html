@@ -1530,7 +1530,7 @@ document.addEventListener('dragover', (event) => {
   targetCard.classList.add('is-drop-target');
 });
 
-document.addEventListener('drop', (event) => {
+document.addEventListener('drop', async (event) => {
 
   const targetCard =
     event.target.closest('.spot');
@@ -1559,6 +1559,29 @@ document.addEventListener('drop', (event) => {
     targetCard
   );
 
+const orderedCards =
+  Array.from(
+    parent.querySelectorAll('.spot')
+  );
+
+for (let i = 0; i < orderedCards.length; i++) {
+
+  const card = orderedCards[i];
+
+  const result = await db
+    .from('course_spots')
+    .update({
+      sort_order: i + 1
+    })
+    .eq('course_id', card.dataset.courseId)
+    .eq('spot_id', card.dataset.spotId);
+
+  if (result.error) {
+    console.error(result.error);
+    break;
+  }
+}
+  
   targetCard.classList.remove('is-drop-target');
 });  
   
