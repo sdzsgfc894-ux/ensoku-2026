@@ -685,6 +685,14 @@ body.is-editing .course-add-button {
       type="text"
     >
 
+    <label for="course-edit-area">
+      エリア
+    </label>
+
+    <select id="course-edit-area">
+      <option value="">未選択</option>
+    </select>
+    
     <label for="course-edit-annotation">
       説明
     </label>
@@ -1270,6 +1278,9 @@ const courseEditId =
 const courseEditName =
   document.getElementById('course-edit-name');
 
+const courseEditArea =
+  document.getElementById('course-edit-area');
+  
 const courseEditAnnotation =
   document.getElementById('course-edit-annotation');
 
@@ -1817,10 +1828,27 @@ courseEditPrivateMemo.value =
   courseEditStatus.textContent = '';
 });
 
-courseAddButton.addEventListener('click', () => {
+courseAddButton.addEventListener('click', async () => {
 
   editingCourseId = null;
 
+const { data: areaList, error: areaError } = await db
+  .from('areas')
+  .select('id,name')
+  .order('sort_order');
+
+if (areaError) {
+  courseEditStatus.textContent =
+    'エリア読み込みエラー：' + areaError.message;
+  return;
+}
+
+courseEditArea.innerHTML =
+  '<option value="">未選択</option>' +
+  areaList.map(area =>
+    `<option value="${area.id}">${escapeHTML(area.name)}</option>`
+  ).join('');
+  
   courseEditName.value = '';
   courseEditAnnotation.value = '';
   courseEditPlannedDate.value = '';
@@ -1844,6 +1872,7 @@ courseSave.addEventListener('click', async () => {
   courseSave.disabled = true;
 
 const coursePayload = {
+  area_id: courseEditArea.value || null,
   name: courseEditName.value.trim(),
   annotation: courseEditAnnotation.value.trim(),
   planned_date: courseEditPlannedDate.value || null,
