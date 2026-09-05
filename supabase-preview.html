@@ -1711,6 +1711,19 @@ if (secondUpdate.error) {
 }
 
 await loadSite();
+
+const { data: courseList, error } = await db
+  .from('courses')
+  .select('id,sort_order')
+  .is('deleted_at', null)
+  .order('sort_order');
+
+if (error) {
+  console.error(error);
+  return;
+}
+
+console.log(courseList);
   
   console.log({
     courseId,
