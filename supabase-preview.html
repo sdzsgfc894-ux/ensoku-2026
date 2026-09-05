@@ -1030,12 +1030,13 @@ function escapeHTML(value) {
     .replaceAll("'", '&#039;');
 }
 
-
+const spotSearch =
+  document.getElementById('spot-search');
+  
 async function loadSite() {
 
   const status = document.getElementById('status');
   const app = document.getElementById('app');
-  const spotSearch = document.getElementById('spot-search');
 
   try {
 
