@@ -664,6 +664,29 @@ body.is-editing .course-edit-button {
       id="course-edit-annotation"
     ></textarea>
 
+<label for="course-edit-planned-date">
+  予定日
+</label>
+<input
+  id="course-edit-planned-date"
+  type="date"
+>
+
+<label for="course-edit-departure-time">
+  出発時刻
+</label>
+<input
+  id="course-edit-departure-time"
+  type="time"
+>
+
+<label for="course-edit-private-memo">
+  非公開メモ
+</label>
+<textarea
+  id="course-edit-private-memo"
+></textarea>
+    
     <div class="spot-editor-actions">
 
       <button
@@ -1218,6 +1241,15 @@ const courseEditName =
 const courseEditAnnotation =
   document.getElementById('course-edit-annotation');
 
+const courseEditPlannedDate =
+  document.getElementById('course-edit-planned-date');
+
+const courseEditDepartureTime =
+  document.getElementById('course-edit-departure-time');
+
+const courseEditPrivateMemo =
+  document.getElementById('course-edit-private-memo');
+  
 const courseCancel =
   document.getElementById('course-cancel');
 
@@ -1722,7 +1754,7 @@ document.addEventListener('click', async (event) => {
     error
   } = await db
     .from('courses')
-    .select('id,name,annotation')
+    .select('id,name,annotation,planned_date,departure_time,private_memo')
     .eq('id', courseId)
     .single();
 
@@ -1741,6 +1773,15 @@ document.addEventListener('click', async (event) => {
   courseEditAnnotation.value =
     data.annotation ?? '';
 
+  courseEditPlannedDate.value =
+  data.planned_date ?? '';
+
+courseEditDepartureTime.value =
+  data.departure_time ?? '';
+
+courseEditPrivateMemo.value =
+  data.private_memo ?? '';
+
   courseEditStatus.textContent = '';
 });
 
@@ -1758,10 +1799,13 @@ courseSave.addEventListener('click', async () => {
   const { error } = await db
     .from('courses')
     .update({
-      name: courseEditName.value.trim(),
-      annotation: courseEditAnnotation.value.trim(),
-      updated_at: new Date().toISOString()
-    })
+  name: courseEditName.value.trim(),
+  annotation: courseEditAnnotation.value.trim(),
+  planned_date: courseEditPlannedDate.value || null,
+  departure_time: courseEditDepartureTime.value || null,
+  private_memo: courseEditPrivateMemo.value.trim(),
+  updated_at: new Date().toISOString()
+})
     .eq('id', courseEditId.value);
 
   if (error) {
