@@ -1920,6 +1920,27 @@ if (selectedAreaId === '__new__') {
     return;
   }
 
+  const existingAreaResult = await db
+  .from('areas')
+  .select('id,name')
+  .ilike('name', newAreaName)
+  .limit(1);
+
+if (existingAreaResult.error) {
+  courseEditStatus.textContent =
+    'エリア確認エラー：' + existingAreaResult.error.message;
+
+  courseSave.disabled = false;
+  return;
+}
+
+if (existingAreaResult.data.length > 0) {
+
+  selectedAreaId =
+    existingAreaResult.data[0].id;
+
+} else {
+
   const areaResult = await db
     .from('areas')
     .insert({
@@ -1927,6 +1948,18 @@ if (selectedAreaId === '__new__') {
     })
     .select('id')
     .single();
+
+  if (areaResult.error) {
+    courseEditStatus.textContent =
+      'エリア保存エラー：' + areaResult.error.message;
+
+    courseSave.disabled = false;
+    return;
+  }
+
+  selectedAreaId =
+    areaResult.data.id;
+}
 
   if (areaResult.error) {
     courseEditStatus.textContent =
