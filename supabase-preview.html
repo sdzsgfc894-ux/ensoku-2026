@@ -1762,7 +1762,7 @@ courseSave.addEventListener('click', async () => {
       annotation: courseEditAnnotation.value.trim(),
       updated_at: new Date().toISOString()
     })
-    .eq('id', editingCourseId);
+    .eq('id', courseEditId.value);
 
   if (error) {
     courseEditStatus.textContent =
