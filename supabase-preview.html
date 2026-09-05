@@ -1711,19 +1711,6 @@ if (secondUpdate.error) {
 }
 
 await loadSite();
-
-const { data: courseList, error } = await db
-  .from('courses')
-  .select('id,sort_order')
-  .is('deleted_at', null)
-  .order('sort_order');
-
-if (error) {
-  console.error(error);
-  return;
-}
-
-console.log(courseList);
   
   console.log({
     courseId,
@@ -2136,6 +2123,19 @@ document.addEventListener('click', async (event) => {
       ? 'up'
       : 'down';
 
+const { data: courseList, error: courseListError } = await db
+  .from('courses')
+  .select('id,sort_order')
+  .is('deleted_at', null)
+  .order('sort_order');
+
+if (courseListError) {
+  console.error(courseListError);
+  return;
+}
+
+console.log(courseList);
+  
   console.log({
     courseId,
     direction
