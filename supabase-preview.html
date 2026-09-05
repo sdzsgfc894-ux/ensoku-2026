@@ -93,6 +93,15 @@
       letter-spacing: .1em;
     }
 
+    .spot-photo {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      display: block;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    
     .spot h3 {
       margin: 8px 0 12px;
       font-size: 20px;
@@ -1056,7 +1065,8 @@ const [
   areasResult,
   coursesResult,
   spotsResult,
-  linksResult
+  linksResult,
+  photosResult
 ] = await Promise.all([
 
       db
@@ -1077,7 +1087,12 @@ const [
       db
         .from('public_course_spots')
         .select('*')
-        .order('sort_order')
+        .order('sort_order'),
+
+      db
+      .from('spot_photos')
+      .select('id, spot_id, storage_path, sort_order, is_primary')
+      .order('sort_order')
 
     ]);
 
@@ -1098,6 +1113,7 @@ const [
     const courses = coursesResult.data;
     const spots = spotsResult.data;
     const courseSpots = linksResult.data;
+    const photos = photosResult.data || [];
 
     const assignedSpotIds = new Set(
       courseSpots.map(item => item.spot_id)
@@ -1152,6 +1168,27 @@ app.innerHTML = areas.map(area => {
           spotMap.get(membership.spot_id);
 
         if (!spot) return '';
+
+        const spotPhotos =
+  photos.filter(
+    photo => photo.spot_id === spot.id
+  );
+
+const primaryPhoto =
+  spotPhotos.find(photo => photo.is_primary)
+  || spotPhotos[0]
+  || null;
+
+let photoUrl = '';
+
+if (primaryPhoto) {
+  const { data } =
+    db.storage
+      .from('spot-photos')
+      .getPublicUrl(primaryPhoto.storage_path);
+
+  photoUrl = data.publicUrl;
+}
 
         const links = [];
 
@@ -1221,6 +1258,14 @@ app.innerHTML = areas.map(area => {
             draggable="true"
             data-course-id="${course.id}"
             data-spot-id="${spot.id}">
+
+            ${photoUrl ? `
+              <img
+                class="spot-photo"
+                src="${escapeHTML(photoUrl)}"
+                alt="${escapeHTML(spot.name)}"
+              >
+            ` : ''}
 
             <div class="spot-order">
               STOP ${String(index + 1).padStart(2, '0')}
