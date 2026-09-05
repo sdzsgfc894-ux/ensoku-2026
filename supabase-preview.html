@@ -733,6 +733,18 @@ body.is-editing .spot-assign-button {
       id="spot-edit-intro"
     ></textarea>
 
+    <div class="form-group">
+      <label for="spot-photo-file">
+        写真
+      </label>
+
+      <input
+        id="spot-photo-file"
+        type="file"
+        accept="image/*"
+      >
+    </div>
+    
 <label for="spot-edit-official">
   公式サイト
 </label>
@@ -1698,6 +1710,9 @@ const spotCancel =
 const spotSave =
   document.getElementById('spot-save');
 
+const spotPhotoFile =
+  document.getElementById('spot-photo-file');  
+
 const spotRemoveFromCourse =
   document.getElementById('spot-remove-from-course');
 
@@ -2018,6 +2033,42 @@ spotSave.addEventListener('click', async () => {
     error = courseSpotResult.error;
   }
 }
+
+const photoFile =
+  spotPhotoFile.files[0];
+
+if (photoFile && editingSpotId) {
+
+  const extension =
+    photoFile.name.split('.').pop();
+
+  const filePath =
+    `${editingSpotId}/${crypto.randomUUID()}.${extension}`;
+
+  const { error: uploadError } =
+    await db.storage
+      .from('spot-photos')
+      .upload(filePath, photoFile);
+
+  if (uploadError) {
+    throw uploadError;
+  }
+
+  const { error: photoInsertError } =
+    await db
+      .from('spot_photos')
+      .insert({
+        spot_id: editingSpotId,
+        storage_path: filePath,
+        sort_order: 999,
+        is_primary: false
+      });
+
+  if (photoInsertError) {
+    throw photoInsertError;
+  }
+}
+  
   if (error) {
 
     spotEditStatus.textContent =
