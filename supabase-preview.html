@@ -765,6 +765,12 @@ body.is-editing .spot-assign-button {
 
     </div>
 
+     <button
+       id="spot-remove-from-course"
+       type="button">
+        このコースから外す
+     </button>
+    
     <p id="spot-edit-status"></p>
 
   </div>
@@ -1253,8 +1259,9 @@ app.innerHTML = areas.map(area => {
             <button
               class="spot-edit-button"
               type="button"
-              data-spot-id="${spot.id}">
-              編集
+              data-spot-id="${spot.id}"
+              data-course-id="${course.id}">
+                編集
             </button>
 
             <button
@@ -1567,6 +1574,8 @@ loginSubmit.addEventListener('click', async () => {
 });
 let editingSpotId = null;
 
+let editingCourseSpotCourseId = null;
+
 const spotAddButton =
   document.getElementById('spot-add-button');
   
@@ -1638,6 +1647,9 @@ const spotCancel =
 
 const spotSave =
   document.getElementById('spot-save');
+
+const spotRemoveFromCourse =
+  document.getElementById('spot-remove-from-course');
 
 const spotEditStatus =
   document.getElementById('spot-edit-status');
@@ -1744,9 +1756,16 @@ document.addEventListener('click', async (event) => {
   spotEditOtherUrl.value = '';
   
   const spotId =
-    button.dataset.spotId;
-  
-　　editingSpotId = spotId;
+  button.dataset.spotId;
+
+editingSpotId = spotId;
+
+editingCourseSpotCourseId =
+  button.dataset.courseId || null;
+spotRemoveFromCourse.style.display =
+  editingCourseSpotCourseId
+    ? 'block'
+    : 'none';
   spotEditStatus.textContent =
     '読み込み中...';
   
@@ -2978,6 +2997,53 @@ assignSave.addEventListener('click', async () => {
     assignStatus.textContent = '';
     assignSave.disabled = false;
     assigningSpotId = null;
+  }, 500);
+});
+
+spotRemoveFromCourse.addEventListener('click', async () => {
+
+  if (!editingSpotId) return;
+
+  if (!editingCourseSpotCourseId) {
+    spotEditStatus.textContent =
+      'このスポットは未分類です';
+    return;
+  }
+
+  const confirmed =
+    confirm('このコースからスポットを外しますか？');
+
+  if (!confirmed) return;
+
+  spotEditStatus.textContent =
+    'コースから外しています...';
+
+  spotRemoveFromCourse.disabled = true;
+
+  const { error } = await db
+    .from('course_spots')
+    .delete()
+    .eq('course_id', editingCourseSpotCourseId)
+    .eq('spot_id', editingSpotId);
+
+  if (error) {
+    spotEditStatus.textContent =
+      '削除エラー：' + error.message;
+
+    spotRemoveFromCourse.disabled = false;
+    return;
+  }
+
+  spotEditStatus.textContent =
+    'このコースから外しました';
+
+  await loadSite();
+
+  setTimeout(() => {
+    spotEditor.classList.remove('open');
+    spotEditStatus.textContent = '';
+    spotRemoveFromCourse.disabled = false;
+    editingCourseSpotCourseId = null;
   }, 500);
 });
   
