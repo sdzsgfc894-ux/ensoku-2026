@@ -845,11 +845,18 @@ async function loadSite() {
 
   try {
 
-    const [
-      coursesResult,
-      spotsResult,
-      linksResult
-    ] = await Promise.all([
+const [
+  areasResult,
+  coursesResult,
+  spotsResult,
+  linksResult
+] = await Promise.all([
+
+      db
+        .from('areas')
+        .select('id,name,sort_order')
+        .is('deleted_at', null)
+        .order('sort_order'),
 
       db
         .from('public_courses')
@@ -868,6 +875,9 @@ async function loadSite() {
     ]);
 
 
+    if (areasResult.error)
+      throw areasResult.error;
+    
     if (coursesResult.error)
       throw coursesResult.error;
 
@@ -877,7 +887,7 @@ async function loadSite() {
     if (linksResult.error)
       throw linksResult.error;
 
-
+    const areas = areasResult.data;
     const courses = coursesResult.data;
     const spots = spotsResult.data;
     const courseSpots = linksResult.data;
@@ -887,264 +897,329 @@ async function loadSite() {
       spots.map(spot => [spot.id, spot])
     );
 
+    const coursesByArea = new Map(
+  areas.map(area => [
+    area.id,
+    courses.filter(
+      course => course.area_id === area.id
+    )
+  ])
+);
 
-    app.innerHTML = courses.map(
-      (course, courseIndex) => {
+let courseCounter = 0;
 
-        const memberships = courseSpots
-          .filter(
-            item =>
-              item.course_id === course.id
-          )
-          .sort(
-            (a, b) =>
-              a.sort_order - b.sort_order
+app.innerHTML = areas.map(area => {
+
+  const areaCourses =
+    coursesByArea.get(area.id) ?? [];
+
+  if (areaCourses.length === 0) {
+    return '';
+  }
+
+  const courseHtml = areaCourses.map(course => {
+
+    const courseIndex = courseCounter++;
+
+    const memberships = courseSpots
+      .filter(
+        item =>
+          item.course_id === course.id
+      )
+      .sort(
+        (a, b) =>
+          a.sort_order - b.sort_order
+      );
+
+    const cards = memberships.map(
+      (membership, index) => {
+
+        const spot =
+          spotMap.get(membership.spot_id);
+
+        if (!spot) return '';
+
+        const links = [];
+
+        if (spot.official_url) {
+          links.push(
+            `<a href="${escapeHTML(spot.official_url)}"
+                target="_blank"
+                rel="noopener">
+                公式サイト
+             </a>`
           );
+        }
 
-
-        const cards = memberships.map(
-          (membership, index) => {
-
-            const spot =
-              spotMap.get(membership.spot_id);
-
-            if (!spot) return '';
-
-
-            const links = [];
-
-            if (spot.official_url) {
-              links.push(
-                `<a href="${escapeHTML(spot.official_url)}"
-                    target="_blank"
-                    rel="noopener">
-                    公式サイト
-                 </a>`
-              );
-            }
-
-            if (spot.instagram_url) {
-              links.push(
-                `<a href="${escapeHTML(spot.instagram_url)}"
-                    target="_blank"
-                    rel="noopener">
-                    Instagram
-                 </a>`
-              );
-            }
-
-           if (spot.x_url) {
-             links.push(
-               `<a href="${escapeHTML(spot.x_url)}"
-                   target="_blank"
-                   rel="noopener">
-                   X
-                </a>`
-              );
-            }
-           
-          if (spot.facebook_url) {
-            links.push(
-               `<a href="${escapeHTML(spot.facebook_url)}"
-                   target="_blank"
-                   rel="noopener">
-                   Facebook
-               </a>`
-              );
-            }
-            
-          if (spot.google_maps_url) {
-            links.push(
-              `<a href="${escapeHTML(spot.google_maps_url)}"
-                  target="_blank"
-                  rel="noopener">
-                  Google Maps
-              </a>`
-             );
-            }
-
-         if (spot.other_url) {
-           links.push(
-             `<a href="${escapeHTML(spot.other_url)}"
-               target="_blank"
-              rel="noopener">
-              その他
-           </a>`
+        if (spot.instagram_url) {
+          links.push(
+            `<a href="${escapeHTML(spot.instagram_url)}"
+                target="_blank"
+                rel="noopener">
+                Instagram
+             </a>`
           );
-         }
+        }
 
-            return `
-             <article
-                class="spot"
-                draggable="true"
-                data-course-id="${course.id}"
-                data-spot-id="${spot.id}">
+        if (spot.x_url) {
+          links.push(
+            `<a href="${escapeHTML(spot.x_url)}"
+                target="_blank"
+                rel="noopener">
+                X
+             </a>`
+          );
+        }
 
-                <div class="spot-order">
-                  STOP ${String(index + 1).padStart(2, '0')}
-                </div>
+        if (spot.facebook_url) {
+          links.push(
+            `<a href="${escapeHTML(spot.facebook_url)}"
+                target="_blank"
+                rel="noopener">
+                Facebook
+             </a>`
+          );
+        }
 
-                <h3>
-                  ${escapeHTML(spot.name)}
-                </h3>
+        if (spot.google_maps_url) {
+          links.push(
+            `<a href="${escapeHTML(spot.google_maps_url)}"
+                target="_blank"
+                rel="noopener">
+                Google Maps
+             </a>`
+          );
+        }
 
-                ${
-                  spot.genre
-                    ? `<div class="genre">
-                         ${escapeHTML(spot.genre)}
-                       </div>`
-                    : ''
-                }
-
-                ${
-                  spot.address
-                    ? `<p class="address">
-                         ${escapeHTML(spot.address)}
-                       </p>`
-                    : ''
-                }
-
-                ${spot.tel
-                  ? `<div class="meta">TEL ${escapeHTML(spot.tel)}</div>`
-                    : ''
-                }
-
-                ${spot.hours
-                  ? `<div class="meta">営業時間 ${escapeHTML(spot.hours)}</div>`
-                    : ''
-                }
-
-                ${spot.closed
-                  ? `<div class="meta">定休日 ${escapeHTML(spot.closed)}</div>`
-                    : ''
-                }
-
-                ${spot.parking
-                  ? `<p class="address">駐車場 ${escapeHTML(spot.parking)}</p>`
-                    : ''
-                }
-
-                ${spot.accessibility
-                  ? `<p class="address">バリアフリー ${escapeHTML(spot.accessibility)}</p>`
-                    : ''
-                }
-
-                ${spot.stay_duration
-                  ? `<p class="address">滞在時間 ${escapeHTML(spot.stay_duration)}</p>`
-                    : ''
-                }
-
-                ${spot.priority
-                  ? `<p class="address">優先度 ${escapeHTML(spot.priority)}</p>`
-                    : ''
-                }
-
-                ${
-                  spot.intro
-                    ? `<p class="intro">
-                         ${escapeHTML(spot.intro)}
-                       </p>`
-                    : ''
-                }
-
-                ${
-                  links.length
-                    ? `<div class="links">
-                         ${links.join('')}
-                       </div>`
-                    : ''
-                }
-<button
-  class="spot-edit-button"
-  type="button"
-  data-spot-id="${spot.id}">
-  編集
-</button>
-
-<div class="spot-order-buttons">
-  <button
-    class="spot-move-up"
-    type="button"
-    data-course-id="${course.id}"
-    data-spot-id="${spot.id}">
-    ↑
-  </button>
-
-  <button
-    class="spot-move-down"
-    type="button"
-    data-course-id="${course.id}"
-    data-spot-id="${spot.id}">
-    ↓
-  </button>
-</div>
-
-              </article>
-            `;
-          }
-        ).join('');
-
+        if (spot.other_url) {
+          links.push(
+            `<a href="${escapeHTML(spot.other_url)}"
+                target="_blank"
+                rel="noopener">
+                その他
+             </a>`
+          );
+        }
 
         return `
-          <section
-  class="course"
-  draggable="true"
-  data-course-id="${course.id}">
+          <article
+            class="spot"
+            draggable="true"
+            data-course-id="${course.id}"
+            data-spot-id="${spot.id}">
 
-            <div class="course-head">
+            <div class="spot-order">
+              STOP ${String(index + 1).padStart(2, '0')}
+            </div>
 
-              <div class="course-number">
-                COURSE
-                ${String(courseIndex + 1).padStart(2, '0')}
-              </div>
+            <h3>
+              ${escapeHTML(spot.name)}
+            </h3>
 
-              <h2>
-                ${escapeHTML(course.name)}
-              </h2>
+            ${
+              spot.genre
+                ? `<div class="genre">
+                     ${escapeHTML(spot.genre)}
+                   </div>`
+                : ''
+            }
 
-                 <button
-                   class="course-edit-button"
-                   type="button"
-                   data-course-id="${course.id}">
-                     コース編集
-                  </button>
+            ${
+              spot.address
+                ? `<p class="address">
+                     ${escapeHTML(spot.address)}
+                   </p>`
+                : ''
+            }
 
-                  <div class="course-order-buttons">
-                    <button
-                       class="course-move-up"
-                       type="button"
-                       data-course-id="${course.id}">
-                         ↑
-                    </button>
+            ${
+              spot.tel
+                ? `<div class="meta">
+                     TEL ${escapeHTML(spot.tel)}
+                   </div>`
+                : ''
+            }
 
-                    <button
-                       class="course-move-down"
-                       type="button"
-                       data-course-id="${course.id}">
-                         ↓
-                    </button>
-                  </div>
+            ${
+              spot.hours
+                ? `<div class="meta">
+                     営業時間 ${escapeHTML(spot.hours)}
+                   </div>`
+                : ''
+            }
 
-              ${
-                course.annotation
-                  ? `<p class="annotation">
-                       ${escapeHTML(course.annotation)}
-                     </p>`
-                  : ''
-              }
+            ${
+              spot.closed
+                ? `<div class="meta">
+                     定休日 ${escapeHTML(spot.closed)}
+                   </div>`
+                : ''
+            }
+
+            ${
+              spot.parking
+                ? `<p class="address">
+                     駐車場 ${escapeHTML(spot.parking)}
+                   </p>`
+                : ''
+            }
+
+            ${
+              spot.accessibility
+                ? `<p class="address">
+                     バリアフリー ${escapeHTML(spot.accessibility)}
+                   </p>`
+                : ''
+            }
+
+            ${
+              spot.stay_duration
+                ? `<p class="address">
+                     滞在時間 ${escapeHTML(spot.stay_duration)}
+                   </p>`
+                : ''
+            }
+
+            ${
+              spot.priority
+                ? `<p class="address">
+                     優先度 ${escapeHTML(spot.priority)}
+                   </p>`
+                : ''
+            }
+
+            ${
+              spot.intro
+                ? `<p class="intro">
+                     ${escapeHTML(spot.intro)}
+                   </p>`
+                : ''
+            }
+
+            ${
+              links.length
+                ? `<div class="links">
+                     ${links.join('')}
+                   </div>`
+                : ''
+            }
+
+            <button
+              class="spot-edit-button"
+              type="button"
+              data-spot-id="${spot.id}">
+              編集
+            </button>
+
+            <div class="spot-order-buttons">
+
+              <button
+                class="spot-move-up"
+                type="button"
+                data-course-id="${course.id}"
+                data-spot-id="${spot.id}">
+                ↑
+              </button>
+
+              <button
+                class="spot-move-down"
+                type="button"
+                data-course-id="${course.id}"
+                data-spot-id="${spot.id}">
+                ↓
+              </button>
 
             </div>
 
-            <div class="spots">
-              ${cards}
-            </div>
-
-          </section>
+          </article>
         `;
       }
     ).join('');
 
+    return `
+      <section
+        class="course"
+        draggable="true"
+        data-course-id="${course.id}">
 
+        <div class="course-head">
+
+          <div class="course-number">
+            COURSE
+            ${String(courseIndex + 1).padStart(2, '0')}
+          </div>
+
+          <h2>
+            ${escapeHTML(course.name)}
+          </h2>
+
+          <button
+            class="course-edit-button"
+            type="button"
+            data-course-id="${course.id}">
+            コース編集
+          </button>
+
+          <div class="course-order-buttons">
+
+            <button
+              class="course-move-up"
+              type="button"
+              data-course-id="${course.id}">
+              ↑
+            </button>
+
+            <button
+              class="course-move-down"
+              type="button"
+              data-course-id="${course.id}">
+              ↓
+            </button>
+
+          </div>
+
+          ${
+            course.annotation
+              ? `<p class="annotation">
+                   ${escapeHTML(course.annotation)}
+                 </p>`
+              : ''
+          }
+
+        </div>
+
+        <div class="spots">
+          ${cards}
+        </div>
+
+      </section>
+    `;
+  }).join('');
+
+  return `
+    <div
+      class="area-heading"
+      data-area-id="${area.id}">
+
+      <h2 class="area-title">
+        ${escapeHTML(area.name)}
+      </h2>
+
+      <button
+        class="area-edit-button"
+        type="button"
+        data-area-id="${area.id}">
+        エリア編集
+      </button>
+
+    </div>
+
+    ${courseHtml}
+  `;
+
+}).join('');
+
+  
     status.textContent =
       `Supabaseから ${courses.length}コース・${spots.length}スポットを読み込みました。`;
 
