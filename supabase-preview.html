@@ -444,6 +444,29 @@ body.is-editing .course-add-button {
   border-radius: 10px;
   cursor: pointer;
 }
+
+.course-order-buttons {
+  display: none;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+body.is-editing .course-order-buttons {
+  display: inline-flex;
+}
+
+.course-order-buttons button {
+  width: 34px;
+  height: 30px;
+
+  border: 1px solid #d6d5cd;
+  background: #f8f7f1;
+  color: #30332d;
+
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 14px;
+}
     
   </style>
 </head>
@@ -1073,6 +1096,22 @@ async function loadSite() {
                    data-course-id="${course.id}">
                      コース編集
                   </button>
+
+                  <div class="course-order-buttons">
+                    <button
+                       class="course-move-up"
+                       type="button"
+                       data-course-id="${course.id}">
+                         ↑
+                    </button>
+
+                    <button
+                       class="course-move-down"
+                       type="button"
+                       data-course-id="${course.id}">
+                         ↓
+                    </button>
+                  </div>
 
               ${
                 course.annotation
