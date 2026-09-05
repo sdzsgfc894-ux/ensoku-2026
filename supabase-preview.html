@@ -661,6 +661,12 @@ body.is-editing .course-add-button {
 
     </div>
 
+    <button
+      id="course-delete"
+      type="button">
+      コースを削除
+    </button>
+    
     <p id="spot-edit-status"></p>
 
   </div>
@@ -1310,6 +1316,9 @@ const courseCancel =
 const courseSave =
   document.getElementById('course-save');
 
+const courseDelete =
+  document.getElementById('course-delete');
+  
 const courseEditStatus =
   document.getElementById('course-edit-status');  
 
@@ -1978,6 +1987,48 @@ courseEditArea.addEventListener('change', () => {
     courseEditNewArea.style.display = 'none';
     courseEditNewArea.value = '';
   }
+});
+
+courseDelete.addEventListener('click', async () => {
+
+  if (!editingCourseId) return;
+
+  const confirmed =
+    confirm('このコースを削除しますか？');
+
+  if (!confirmed) return;
+
+  courseEditStatus.textContent =
+    '削除中...';
+
+  courseDelete.disabled = true;
+
+  const { error } = await db
+    .from('courses')
+    .update({
+      deleted_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', editingCourseId);
+
+  if (error) {
+    courseEditStatus.textContent =
+      '削除エラー：' + error.message;
+
+    courseDelete.disabled = false;
+    return;
+  }
+
+  courseEditStatus.textContent =
+    '削除しました';
+
+  await loadSite();
+
+  setTimeout(() => {
+    courseEditor.classList.remove('open');
+    courseEditStatus.textContent = '';
+    courseDelete.disabled = false;
+  }, 500);
 });
   
 </script>
