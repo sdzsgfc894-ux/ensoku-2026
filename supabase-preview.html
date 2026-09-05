@@ -467,6 +467,15 @@ body.is-editing .course-order-buttons {
   cursor: pointer;
   font-size: 14px;
 }
+
+.course.is-dragging {
+  opacity: 0.55;
+}
+
+.course.is-drop-target {
+  outline: 2px dashed #8f9487;
+  outline-offset: 6px;
+}
     
   </style>
 </head>
@@ -2198,6 +2207,99 @@ await loadSite();
     courseId,
     direction
   });
+});
+
+document.addEventListener('dragstart', (event) => {
+
+  const course =
+    event.target.closest('.course');
+
+  if (!course) return;
+
+  course.classList.add('is-dragging');
+});
+
+document.addEventListener('dragend', (event) => {
+
+  const course =
+    event.target.closest('.course');
+
+  if (!course) return;
+
+  course.classList.remove('is-dragging');
+
+  document
+    .querySelectorAll('.course.is-drop-target')
+    .forEach(item => {
+      item.classList.remove('is-drop-target');
+    });
+});
+
+document.addEventListener('dragover', (event) => {
+
+  const targetCourse =
+    event.target.closest('.course');
+
+  const draggingCourse =
+    document.querySelector('.course.is-dragging');
+
+  if (!targetCourse || !draggingCourse) return;
+
+  if (targetCourse === draggingCourse) return;
+
+  event.preventDefault();
+
+  document
+    .querySelectorAll('.course.is-drop-target')
+    .forEach(item => {
+      item.classList.remove('is-drop-target');
+    });
+
+  targetCourse.classList.add('is-drop-target');
+});
+
+document.addEventListener('drop', (event) => {
+
+  const targetCourse =
+    event.target.closest('.course');
+
+  const draggingCourse =
+    document.querySelector('.course.is-dragging');
+
+  if (!targetCourse || !draggingCourse) return;
+
+  if (targetCourse === draggingCourse) return;
+
+  event.preventDefault();
+
+  const parent =
+    targetCourse.parentElement;
+
+  const courses =
+    Array.from(parent.querySelectorAll('.course'));
+
+  const draggingIndex =
+    courses.indexOf(draggingCourse);
+
+  const targetIndex =
+    courses.indexOf(targetCourse);
+
+  if (draggingIndex < targetIndex) {
+
+    parent.insertBefore(
+      draggingCourse,
+      targetCourse.nextSibling
+    );
+
+  } else {
+
+    parent.insertBefore(
+      draggingCourse,
+      targetCourse
+    );
+  }
+
+  targetCourse.classList.remove('is-drop-target');
 });
   
 </script>
