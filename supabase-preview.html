@@ -1204,6 +1204,8 @@ const spotSave =
 const spotEditStatus =
   document.getElementById('spot-edit-status');
 
+let editingCourseId = null;
+  
 const courseEditor =
   document.getElementById('course-editor');
 
@@ -1483,6 +1485,8 @@ document.addEventListener('click', async (event) => {
   const courseId =
     moveButton.dataset.courseId;
 
+  editingCourseId = courseId;
+
   const spotId =
     moveButton.dataset.spotId;
 
@@ -1758,7 +1762,7 @@ courseSave.addEventListener('click', async () => {
       annotation: courseEditAnnotation.value.trim(),
       updated_at: new Date().toISOString()
     })
-    .eq('id', courseEditId.value);
+    .eq('id', editingCourseId);
 
   if (error) {
     courseEditStatus.textContent =
