@@ -517,7 +517,25 @@ body.is-editing .area-order-buttons {
   cursor: pointer;
   font-size: 14px;
 }
-  
+
+.spot-assign-button {
+  display: none;
+  margin-top: 8px;
+  padding: 7px 11px;
+
+  border: 1px solid #d6d5cd;
+  background: #f8f7f1;
+  color: #30332d;
+
+  border-radius: 999px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+body.is-editing .spot-assign-button {
+  display: inline-block;
+}
+    
   </style>
 </head>
 
@@ -845,6 +863,40 @@ body.is-editing .area-order-buttons {
   </div>
 </div>
 
+<div id="assign-editor" class="spot-editor">
+  <div class="spot-editor-box">
+
+    <h2>コースへ追加</h2>
+
+    <label for="assign-course">
+      追加先コース
+    </label>
+
+    <select id="assign-course">
+      <option value="">未選択</option>
+    </select>
+
+    <div class="spot-editor-actions">
+
+      <button
+        id="assign-cancel"
+        type="button">
+        キャンセル
+      </button>
+
+      <button
+        id="assign-save"
+        type="button">
+        追加
+      </button>
+
+    </div>
+
+    <p id="assign-status"></p>
+
+  </div>
+</div>
+  
 <div id="area-editor" class="spot-editor">
   <div class="spot-editor-box">
 
@@ -1203,6 +1255,13 @@ app.innerHTML = areas.map(area => {
               type="button"
               data-spot-id="${spot.id}">
               編集
+            </button>
+
+            <button
+              class="spot-assign-button"
+              type="button"
+              data-spot-id="${spot.id}">
+              コースへ追加
             </button>
 
             <div class="spot-order-buttons">
@@ -1647,6 +1706,23 @@ const areaDelete =
   
 const areaEditStatus =
   document.getElementById('area-edit-status');
+
+const assignEditor =
+  document.getElementById('assign-editor');
+
+const assignCourse =
+  document.getElementById('assign-course');
+
+const assignCancel =
+  document.getElementById('assign-cancel');
+
+const assignSave =
+  document.getElementById('assign-save');
+
+const assignStatus =
+  document.getElementById('assign-status');
+
+let assigningSpotId = null;
   
 document.addEventListener('click', async (event) => {
   
@@ -2791,6 +2867,117 @@ areaDelete.addEventListener('click', async () => {
     areaEditor.classList.remove('open');
     areaEditStatus.textContent = '';
     areaDelete.disabled = false;
+  }, 500);
+});
+
+document.addEventListener('click', async (event) => {
+
+  const button =
+    event.target.closest('.spot-assign-button');
+
+  if (!button) return;
+
+  assigningSpotId =
+    button.dataset.spotId;
+
+  assignStatus.textContent =
+    'コースを読み込み中...';
+
+  assignEditor.classList.add('open');
+
+  assignCourse.value = '';
+  
+  const { data: courseList, error } = await db
+    .from('public_courses')
+    .select('id,name')
+    .order('sort_order');
+
+  if (error) {
+    assignStatus.textContent =
+      'コース読み込みエラー：' + error.message;
+    return;
+  }
+
+  assignCourse.innerHTML =
+    '<option value="">未選択</option>' +
+    courseList.map(course =>
+      `<option value="${course.id}">
+         ${escapeHTML(course.name)}
+       </option>`
+    ).join('');
+
+  assignStatus.textContent = '';
+});
+
+assignCancel.addEventListener('click', () => {
+
+  assignEditor.classList.remove('open');
+  assignStatus.textContent = '';
+  assigningSpotId = null;
+});
+
+assignSave.addEventListener('click', async () => {
+
+  if (!assigningSpotId) return;
+
+  if (!assignCourse.value) {
+    assignStatus.textContent =
+      '追加先コースを選んでください';
+    return;
+  }
+
+  assignStatus.textContent =
+    '追加中...';
+
+  assignSave.disabled = true;
+
+  const { data: existingLinks, error: readError } = await db
+    .from('course_spots')
+    .select('sort_order')
+    .eq('course_id', assignCourse.value)
+    .order('sort_order', { ascending: false })
+    .limit(1);
+
+  if (readError) {
+    assignStatus.textContent =
+      '読み込みエラー：' + readError.message;
+
+    assignSave.disabled = false;
+    return;
+  }
+
+  const nextOrder =
+    existingLinks.length > 0
+      ? (existingLinks[0].sort_order ?? 0) + 1
+      : 1;
+
+  const { error } = await db
+    .from('course_spots')
+    .insert({
+      course_id: assignCourse.value,
+      spot_id: assigningSpotId,
+      sort_order: nextOrder,
+      route_included: true
+    });
+
+  if (error) {
+    assignStatus.textContent =
+      '追加エラー：' + error.message;
+
+    assignSave.disabled = false;
+    return;
+  }
+
+  assignStatus.textContent =
+    'コースへ追加しました';
+
+  await loadSite();
+
+  setTimeout(() => {
+    assignEditor.classList.remove('open');
+    assignStatus.textContent = '';
+    assignSave.disabled = false;
+    assigningSpotId = null;
   }, 500);
 });
   
