@@ -636,6 +636,55 @@ body.is-editing .course-edit-button {
 
   </div>
 </div>  
+
+<div id="course-editor" class="spot-editor">
+  <div class="spot-editor-box">
+
+    <h2>コース編集</h2>
+
+    <input
+      id="course-edit-id"
+      type="hidden"
+    >
+
+    <label for="course-edit-name">
+      コース名
+    </label>
+
+    <input
+      id="course-edit-name"
+      type="text"
+    >
+
+    <label for="course-edit-annotation">
+      説明
+    </label>
+
+    <textarea
+      id="course-edit-annotation"
+    ></textarea>
+
+    <div class="spot-editor-actions">
+
+      <button
+        id="course-cancel"
+        type="button">
+        キャンセル
+      </button>
+
+      <button
+        id="course-save"
+        type="button">
+        保存
+      </button>
+
+    </div>
+
+    <p id="course-edit-status"></p>
+
+  </div>
+</div>
+  
 <header>
   <h1>遠足候補 2026</h1>
   <p>Supabase preview</p>
@@ -1155,6 +1204,26 @@ const spotSave =
 const spotEditStatus =
   document.getElementById('spot-edit-status');
 
+const courseEditor =
+  document.getElementById('course-editor');
+
+const courseEditId =
+  document.getElementById('course-edit-id');
+
+const courseEditName =
+  document.getElementById('course-edit-name');
+
+const courseEditAnnotation =
+  document.getElementById('course-edit-annotation');
+
+const courseCancel =
+  document.getElementById('course-cancel');
+
+const courseSave =
+  document.getElementById('course-save');
+
+const courseEditStatus =
+  document.getElementById('course-edit-status');  
 
 document.addEventListener('click', async (event) => {
   
@@ -1628,6 +1697,87 @@ for (let i = 0; i < orderedCards.length; i++) {
   
   targetCard.classList.remove('is-drop-target');
 });  
+
+document.addEventListener('click', async (event) => {
+
+  const button =
+    event.target.closest('.course-edit-button');
+
+  if (!button) return;
+
+  const courseId =
+    button.dataset.courseId;
+
+  courseEditStatus.textContent =
+    '読み込み中...';
+
+  courseEditor.classList.add('open');
+
+  const {
+    data,
+    error
+  } = await db
+    .from('courses')
+    .select('id,name,annotation')
+    .eq('id', courseId)
+    .single();
+
+  if (error) {
+    courseEditStatus.textContent =
+      '読み込みエラー：' + error.message;
+    return;
+  }
+
+  courseEditId.value =
+    data.id;
+
+  courseEditName.value =
+    data.name ?? '';
+
+  courseEditAnnotation.value =
+    data.annotation ?? '';
+
+  courseEditStatus.textContent = '';
+});
+
+courseCancel.addEventListener('click', () => {
+
+  courseEditor.classList.remove('open');
+  courseEditStatus.textContent = '';
+});  
+
+courseSave.addEventListener('click', async () => {
+
+  courseEditStatus.textContent = '保存中...';
+  courseSave.disabled = true;
+
+  const { error } = await db
+    .from('courses')
+    .update({
+      name: courseEditName.value.trim(),
+      annotation: courseEditAnnotation.value.trim(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', courseEditId.value);
+
+  if (error) {
+    courseEditStatus.textContent =
+      '保存エラー：' + error.message;
+
+    courseSave.disabled = false;
+    return;
+  }
+
+  courseEditStatus.textContent = '保存しました';
+
+  await loadSite();
+
+  setTimeout(() => {
+    courseEditor.classList.remove('open');
+    courseEditStatus.textContent = '';
+    courseSave.disabled = false;
+  }, 500);
+});
   
 </script>
 
