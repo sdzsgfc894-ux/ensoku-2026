@@ -1384,6 +1384,19 @@ document.addEventListener('click', async (event) => {
       ? 'up'
       : 'down';
 
+const { data: courseSpots, error } = await db
+  .from('course_spots')
+  .select('spot_id,sort_order')
+  .eq('course_id', courseId)
+  .order('sort_order');
+
+if (error) {
+  console.error(error);
+  return;
+}
+
+console.log(courseSpots);
+  
   console.log({
     courseId,
     spotId,
