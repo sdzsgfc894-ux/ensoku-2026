@@ -821,6 +821,46 @@ body.is-editing .area-edit-button {
 
   </div>
 </div>
+
+<div id="area-editor" class="spot-editor">
+  <div class="spot-editor-box">
+
+    <h2>エリア編集</h2>
+
+    <input
+      id="area-edit-id"
+      type="hidden"
+    >
+
+    <label for="area-edit-name">
+      エリア名
+    </label>
+
+    <input
+      id="area-edit-name"
+      type="text"
+    >
+
+    <div class="spot-editor-actions">
+
+      <button
+        id="area-cancel"
+        type="button">
+        キャンセル
+      </button>
+
+      <button
+        id="area-save"
+        type="button">
+        保存
+      </button>
+
+    </div>
+
+    <p id="area-edit-status"></p>
+
+  </div>
+</div>
   
 <header>
   <h1>遠足候補 2026</h1>
@@ -1479,6 +1519,24 @@ const courseDelete =
 const courseEditStatus =
   document.getElementById('course-edit-status');  
 
+const areaEditor =
+  document.getElementById('area-editor');
+
+const areaEditId =
+  document.getElementById('area-edit-id');
+
+const areaEditName =
+  document.getElementById('area-edit-name');
+
+const areaCancel =
+  document.getElementById('area-cancel');
+
+const areaSave =
+  document.getElementById('area-save');
+
+const areaEditStatus =
+  document.getElementById('area-edit-status');
+  
 document.addEventListener('click', async (event) => {
   
   const button =
@@ -2415,6 +2473,83 @@ for (let i = 0; i < orderedCourses.length; i++) {
 }
   
   targetCourse.classList.remove('is-drop-target');
+});
+
+document.addEventListener('click', async (event) => {
+
+  const button =
+    event.target.closest('.area-edit-button');
+
+  if (!button) return;
+
+  const areaId =
+    button.dataset.areaId;
+
+  areaEditStatus.textContent =
+    '読み込み中...';
+
+  areaEditor.classList.add('open');
+
+  const {
+    data,
+    error
+  } = await db
+    .from('areas')
+    .select('id,name')
+    .eq('id', areaId)
+    .single();
+
+  if (error) {
+    areaEditStatus.textContent =
+      '読み込みエラー：' + error.message;
+    return;
+  }
+
+  areaEditId.value =
+    data.id;
+
+  areaEditName.value =
+    data.name ?? '';
+
+  areaEditStatus.textContent = '';
+});
+
+areaCancel.addEventListener('click', () => {
+
+  areaEditor.classList.remove('open');
+  areaEditStatus.textContent = '';
+});
+
+areaSave.addEventListener('click', async () => {
+
+  areaEditStatus.textContent = '保存中...';
+  areaSave.disabled = true;
+
+  const { error } = await db
+    .from('areas')
+    .update({
+      name: areaEditName.value.trim(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', areaEditId.value);
+
+  if (error) {
+    areaEditStatus.textContent =
+      '保存エラー：' + error.message;
+
+    areaSave.disabled = false;
+    return;
+  }
+
+  areaEditStatus.textContent = '保存しました';
+
+  await loadSite();
+
+  setTimeout(() => {
+    areaEditor.classList.remove('open');
+    areaEditStatus.textContent = '';
+    areaSave.disabled = false;
+  }, 500);
 });
   
 </script>
