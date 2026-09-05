@@ -1396,6 +1396,63 @@ if (error) {
 }
 
 console.log(courseSpots);
+
+const currentIndex =
+  courseSpots.findIndex(item => item.spot_id === spotId);
+
+if (currentIndex === -1) return;
+
+const targetIndex =
+  direction === 'up'
+    ? currentIndex - 1
+    : currentIndex + 1;
+
+if (
+  targetIndex < 0 ||
+  targetIndex >= courseSpots.length
+) {
+  return;
+}
+
+const currentItem =
+  courseSpots[currentIndex];
+
+const targetItem =
+  courseSpots[targetIndex];
+
+const currentOrder =
+  currentItem.sort_order;
+
+const targetOrder =
+  targetItem.sort_order;
+
+const firstUpdate = await db
+  .from('course_spots')
+  .update({
+    sort_order: targetOrder
+  })
+  .eq('course_id', courseId)
+  .eq('spot_id', currentItem.spot_id);
+
+if (firstUpdate.error) {
+  console.error(firstUpdate.error);
+  return;
+}
+
+const secondUpdate = await db
+  .from('course_spots')
+  .update({
+    sort_order: currentOrder
+  })
+  .eq('course_id', courseId)
+  .eq('spot_id', targetItem.spot_id);
+
+if (secondUpdate.error) {
+  console.error(secondUpdate.error);
+  return;
+}
+
+await loadSite();
   
   console.log({
     courseId,
