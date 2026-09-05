@@ -690,8 +690,16 @@ body.is-editing .course-add-button {
     </label>
 
     <select id="course-edit-area">
-      <option value="">未選択</option>
-    </select>
+  <option value="">未選択</option>
+  <option value="__new__">＋ 新しいエリア</option>
+</select>
+
+   <input
+     id="course-edit-new-area"
+     type="text"
+     placeholder="新しいエリア名"
+     style="display:none;"
+   >
     
     <label for="course-edit-annotation">
       説明
@@ -1280,6 +1288,9 @@ const courseEditName =
 
 const courseEditArea =
   document.getElementById('course-edit-area');
+
+const courseEditNewArea =
+  document.getElementById('course-edit-new-area');
   
 const courseEditAnnotation =
   document.getElementById('course-edit-annotation');
@@ -1871,8 +1882,43 @@ courseSave.addEventListener('click', async () => {
   courseEditStatus.textContent = '保存中...';
   courseSave.disabled = true;
 
-const coursePayload = {
-  area_id: courseEditArea.value || null,
+let selectedAreaId = courseEditArea.value;
+
+if (selectedAreaId === '__new__') {
+
+  const newAreaName =
+    courseEditNewArea.value.trim();
+
+  if (!newAreaName) {
+    courseEditStatus.textContent =
+      '新しいエリア名を入力してください';
+
+    courseSave.disabled = false;
+    return;
+  }
+
+  const areaResult = await db
+    .from('areas')
+    .insert({
+      name: newAreaName
+    })
+    .select('id')
+    .single();
+
+  if (areaResult.error) {
+    courseEditStatus.textContent =
+      'エリア保存エラー：' + areaResult.error.message;
+
+    courseSave.disabled = false;
+    return;
+  }
+
+  selectedAreaId =
+    areaResult.data.id;
+}
+  
+  const coursePayload = {
+  area_id: selectedAreaId || null,
   name: courseEditName.value.trim(),
   annotation: courseEditAnnotation.value.trim(),
   planned_date: courseEditPlannedDate.value || null,
@@ -1921,6 +1967,16 @@ if (editingCourseId) {
     courseEditStatus.textContent = '';
     courseSave.disabled = false;
   }, 500);
+});
+
+courseEditArea.addEventListener('change', () => {
+
+  if (courseEditArea.value === '__new__') {
+    courseEditNewArea.style.display = 'block';
+  } else {
+    courseEditNewArea.style.display = 'none';
+    courseEditNewArea.value = '';
+  }
 });
   
 </script>
