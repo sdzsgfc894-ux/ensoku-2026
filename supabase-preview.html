@@ -1554,10 +1554,29 @@ document.addEventListener('drop', async (event) => {
   const parent =
     targetCard.parentElement;
 
+  const cards =
+  Array.from(parent.querySelectorAll('.spot'));
+
+const draggingIndex =
+  cards.indexOf(draggingCard);
+
+const targetIndex =
+  cards.indexOf(targetCard);
+
+if (draggingIndex < targetIndex) {
+
+  parent.insertBefore(
+    draggingCard,
+    targetCard.nextSibling
+  );
+
+} else {
+
   parent.insertBefore(
     draggingCard,
     targetCard
   );
+}
 
 const orderedCards =
   Array.from(
