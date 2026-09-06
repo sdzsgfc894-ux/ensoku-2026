@@ -1964,6 +1964,22 @@ spotPhotoList.innerHTML =
     >
       削除
     </button>
+
+<button
+  type="button"
+  class="photo-move-up"
+  data-photo-id="${photo.id}"
+>
+  ↑
+</button>
+
+<button
+  type="button"
+  class="photo-move-down"
+  data-photo-id="${photo.id}"
+>
+  ↓
+</button>
     
   </div>
 `;
@@ -2423,6 +2439,101 @@ document.addEventListener('click', async (event) => {
 
   spotEditStatus.textContent =
     '写真を削除しました';
+
+  await loadSite();
+});
+
+document.addEventListener('click', async (event) => {
+
+  const button =
+    event.target.closest('.photo-move-up, .photo-move-down');
+
+  if (!button) return;
+
+  const photoId =
+    button.dataset.photoId;
+
+  if (!editingSpotId) return;
+
+  const direction =
+    button.classList.contains('photo-move-up')
+      ? 'up'
+      : 'down';
+
+  const { data: photoRows, error } =
+    await db
+      .from('spot_photos')
+      .select('id, sort_order')
+      .eq('spot_id', editingSpotId)
+      .order('sort_order');
+
+  if (error) {
+    spotEditStatus.textContent =
+      '写真並べ替えエラー：' + error.message;
+    return;
+  }
+
+  const currentIndex =
+    photoRows.findIndex(
+      photo => photo.id === photoId
+    );
+
+  if (currentIndex === -1) return;
+
+  const targetIndex =
+    direction === 'up'
+      ? currentIndex - 1
+      : currentIndex + 1;
+
+  if (
+    targetIndex < 0 ||
+    targetIndex >= photoRows.length
+  ) {
+    return;
+  }
+
+  const currentPhoto =
+    photoRows[currentIndex];
+
+  const targetPhoto =
+    photoRows[targetIndex];
+
+  const currentOrder =
+    currentPhoto.sort_order;
+
+  const targetOrder =
+    targetPhoto.sort_order;
+
+  const { error: currentError } =
+    await db
+      .from('spot_photos')
+      .update({
+        sort_order: targetOrder
+      })
+      .eq('id', currentPhoto.id);
+
+  if (currentError) {
+    spotEditStatus.textContent =
+      '写真並べ替えエラー：' + currentError.message;
+    return;
+  }
+
+  const { error: targetError } =
+    await db
+      .from('spot_photos')
+      .update({
+        sort_order: currentOrder
+      })
+      .eq('id', targetPhoto.id);
+
+  if (targetError) {
+    spotEditStatus.textContent =
+      '写真並べ替えエラー：' + targetError.message;
+    return;
+  }
+
+  spotEditStatus.textContent =
+    '写真の順番を変更しました';
 
   await loadSite();
 });
