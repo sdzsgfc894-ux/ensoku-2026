@@ -1955,6 +1955,16 @@ spotPhotoList.innerHTML =
     >
       ${photo.is_primary ? '代表写真' : '代表にする'}
     </button>
+
+    <button
+      type="button"
+      class="photo-delete-button"
+      data-photo-id="${photo.id}"
+      data-storage-path="${escapeHTML(photo.storage_path)}"
+    >
+      削除
+    </button>
+    
   </div>
 `;
   }).join('');
@@ -2365,6 +2375,58 @@ document.addEventListener('dragend', (event) => {
     });
 });
 
+document.addEventListener('click', async (event) => {
+
+  const button =
+    event.target.closest('.photo-delete-button');
+
+  if (!button) return;
+
+  const photoId =
+    button.dataset.photoId;
+
+  const storagePath =
+    button.dataset.storagePath;
+
+  if (!photoId || !storagePath) return;
+
+  const confirmed =
+    confirm('この写真を削除しますか？');
+
+  if (!confirmed) return;
+
+  spotEditStatus.textContent =
+    '写真を削除しています...';
+
+  const { error: storageError } =
+    await db.storage
+      .from('spot-photos')
+      .remove([storagePath]);
+
+  if (storageError) {
+    spotEditStatus.textContent =
+      '写真削除エラー：' + storageError.message;
+    return;
+  }
+
+  const { error: dbError } =
+    await db
+      .from('spot_photos')
+      .delete()
+      .eq('id', photoId);
+
+  if (dbError) {
+    spotEditStatus.textContent =
+      '写真情報の削除エラー：' + dbError.message;
+    return;
+  }
+
+  spotEditStatus.textContent =
+    '写真を削除しました';
+
+  await loadSite();
+});
+  
 document.addEventListener('dragover', (event) => {
 
   const targetCard =
