@@ -2498,40 +2498,27 @@ document.addEventListener('click', async (event) => {
   const targetPhoto =
     photoRows[targetIndex];
 
-  const currentOrder =
-    currentPhoto.sort_order;
+ const reordered = [...photoRows];
 
-  const targetOrder =
-    targetPhoto.sort_order;
+[reordered[currentIndex], reordered[targetIndex]] =
+  [reordered[targetIndex], reordered[currentIndex]];
 
-  const { error: currentError } =
+for (let i = 0; i < reordered.length; i++) {
+
+  const { error: updateError } =
     await db
       .from('spot_photos')
       .update({
-        sort_order: targetOrder
+        sort_order: i + 1
       })
-      .eq('id', currentPhoto.id);
+      .eq('id', reordered[i].id);
 
-  if (currentError) {
+  if (updateError) {
     spotEditStatus.textContent =
-      '写真並べ替えエラー：' + currentError.message;
+      '写真並べ替えエラー：' + updateError.message;
     return;
   }
-
-  const { error: targetError } =
-    await db
-      .from('spot_photos')
-      .update({
-        sort_order: currentOrder
-      })
-      .eq('id', targetPhoto.id);
-
-  if (targetError) {
-    spotEditStatus.textContent =
-      '写真並べ替えエラー：' + targetError.message;
-    return;
-  }
-
+}
   spotEditStatus.textContent =
     '写真の順番を変更しました';
 
