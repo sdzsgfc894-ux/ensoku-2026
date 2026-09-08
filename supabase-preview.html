@@ -2164,16 +2164,38 @@ const spotById =
     ])
   );
 
-const stops =
+const stopSpots =
   membershipRows
     .map(row => spotById.get(row.spot_id))
-    .filter(Boolean)
-    .map(spot => ({
-      name: spot.name,
-      lat: spot.route_latitude,
-      lon: spot.route_longitude
-      
-    }));
+    .filter(Boolean);
+
+const stops =
+  await Promise.all(
+    stopSpots.map(async spot => {
+
+      if (
+        spot.route_latitude &&
+        spot.route_longitude
+      ) {
+        return {
+          name: spot.name,
+          lat: spot.route_latitude,
+          lon: spot.route_longitude
+        };
+      }
+
+      const geo =
+        await browserGeocode(
+          spot.address || spot.name
+        );
+
+      return {
+        name: spot.name,
+        lat: geo.lat,
+        lon: geo.lon
+      };
+    })
+  );
 
   button.disabled = true;
 button.textContent = '計算中…';
@@ -2190,9 +2212,9 @@ try {
         'content-type': 'application/json'
       },
       body: JSON.stringify({
-        origin,
-        stops
-      })
+  originGeo: await browserGeocode(origin),
+  stops
+})
     });
 
   const data =
