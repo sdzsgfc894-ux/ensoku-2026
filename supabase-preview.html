@@ -1525,6 +1525,26 @@ if (unassignedSpots.length > 0) {
               : ''
           }
 
+<div
+  class="route-calc"
+  data-course-id="${course.id}"
+>
+  <input
+    class="route-origin"
+    type="text"
+    placeholder="出発地"
+  >
+
+  <button
+    type="button"
+    class="route-search"
+  >
+    料金・時間を計算
+  </button>
+
+  <div class="route-status"></div>
+</div>
+
         </div>
 
         <div class="spots">
@@ -2046,6 +2066,136 @@ spotPhotoList.innerHTML =
 
   spotEditor.classList.add('open');
 });
+
+document.addEventListener('click', async (event) => {
+
+  const button =
+    event.target.closest('.route-search');
+
+  if (!button) return;
+
+  const calc =
+    button.closest('.route-calc');
+
+  const courseId =
+    calc.dataset.courseId;
+
+  const originInput =
+    calc.querySelector('.route-origin');
+
+  const status =
+    calc.querySelector('.route-status');
+
+  const origin =
+    originInput.value.trim();
+
+  if (!origin) {
+    status.textContent =
+      '出発地を入力してください。';
+    return;
+  }
+
+ const { data: membershipRows, error: membershipError } =
+  await db
+    .from('course_spots')
+    .select('spot_id, sort_order')
+    .eq('course_id', courseId)
+    .order('sort_order');
+
+if (membershipError) {
+  status.textContent =
+    'コース情報の取得エラー：' + membershipError.message;
+  return;
+}
+
+const spotIds =
+  membershipRows.map(row => row.spot_id);
+
+const { data: spotRows, error: spotError } =
+  await db
+    .from('public_spots')
+    .select('id, name, address')
+    .in('id', spotIds);
+
+if (spotError) {
+  status.textContent =
+    'スポット情報の取得エラー：' + spotError.message;
+  return;
+}
+
+const spotById =
+  new Map(
+    (spotRows || []).map(spot => [
+      spot.id,
+      spot
+    ])
+  );
+
+const stops =
+  membershipRows
+    .map(row => spotById.get(row.spot_id))
+    .filter(Boolean)
+    .map(spot => ({
+      name: spot.name,
+      address: spot.address
+    }));
+
+  button.disabled = true;
+button.textContent = '計算中…';
+
+status.textContent =
+  'NAVITIMEでルートを検索しています…';
+
+try {
+
+  const res =
+    await fetch('/.netlify/functions/navitime-route', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        origin,
+        stops
+      })
+    });
+
+  const data =
+    await res.json();
+
+  if (!res.ok) {
+    throw new Error(
+      data.error || '検索に失敗しました'
+    );
+  }
+
+  console.log(data);
+
+  status.textContent =
+    `${data.originLabel}から順番に計算しました。`;
+
+} catch (e) {
+
+  status.textContent =
+    'エラー：' + e.message;
+
+} finally {
+
+  button.disabled = false;
+  button.textContent =
+    '料金・時間を計算';
+}
+
+  console.log({
+    courseId,
+    origin,
+    stops
+  });
+
+  status.textContent =
+    `${stops.length}件の立ち寄り先を取得しました。`;
+});
+  
 spotAddButton.addEventListener('click', async () => {
 
   editingSpotId = null;
