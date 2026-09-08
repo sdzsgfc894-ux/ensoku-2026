@@ -2519,10 +2519,35 @@ for (let i = 0; i < reordered.length; i++) {
     return;
   }
 }
-  spotEditStatus.textContent =
-    '写真の順番を変更しました';
+ const currentItem =
+  spotPhotoList.querySelector(
+    `[data-photo-id="${photoId}"]`
+  );
 
-  await loadSite();
+const targetItem =
+  spotPhotoList.querySelector(
+    `[data-photo-id="${targetPhoto.id}"]`
+  );
+
+if (currentItem && targetItem) {
+
+  if (direction === 'up') {
+    spotPhotoList.insertBefore(
+      currentItem,
+      targetItem
+    );
+  } else {
+    spotPhotoList.insertBefore(
+      targetItem,
+      currentItem
+    );
+  }
+}
+
+spotEditStatus.textContent =
+  '写真の順番を変更しました';
+
+await loadSite();
 });
   
 document.addEventListener('dragover', (event) => {
