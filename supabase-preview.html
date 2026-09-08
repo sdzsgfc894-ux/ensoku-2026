@@ -2114,7 +2114,9 @@ const spotIds =
 const { data: spotRows, error: spotError } =
   await db
     .from('public_spots')
-    .select('id, name, address')
+    .select(
+  'id, name, address, route_latitude, route_longitude'
+)
     .in('id', spotIds);
 
 if (spotError) {
@@ -2137,7 +2139,9 @@ const stops =
     .filter(Boolean)
     .map(spot => ({
       name: spot.name,
-      address: spot.address
+      lat: spot.route_latitude,
+      lon: spot.route_longitude
+      
     }));
 
   button.disabled = true;
