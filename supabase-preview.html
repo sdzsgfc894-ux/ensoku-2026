@@ -1070,21 +1070,38 @@ function escapeHTML(value) {
 }
 
 async function browserGeocode(q) {
+
+  const cleaned =
+    String(q ?? '')
+      .replace(
+        /〒\s*\d{3}-?\d{4}\s*/g,
+        ''
+      )
+      .trim();
+
   const u =
     'https://msearch.gsi.go.jp/address-search/AddressSearch?q=' +
-    encodeURIComponent(q);
+    encodeURIComponent(cleaned);
 
-  const r = await fetch(u);
+  const r =
+    await fetch(u);
 
   if (!r.ok) {
-    throw new Error('住所検索に失敗しました');
+    throw new Error(
+      '住所検索に失敗しました'
+    );
   }
 
-  const j = await r.json();
+  const j =
+    await r.json();
 
-  if (!Array.isArray(j) || !j.length) {
+  if (
+    !Array.isArray(j) ||
+    !j.length
+  ) {
     throw new Error(
-      '「' + q + '」の位置を特定できませんでした'
+      '「' + cleaned +
+      '」の位置を特定できませんでした'
     );
   }
 
@@ -1096,7 +1113,8 @@ async function browserGeocode(q) {
     lon,
     label:
       (j[0].properties &&
-       j[0].properties.title) || q
+       j[0].properties.title) ||
+      cleaned
   };
 }
   
