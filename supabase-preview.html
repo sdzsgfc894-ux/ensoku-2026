@@ -2246,8 +2246,33 @@ try {
 
   console.log(data);
 
-  status.textContent =
-    `${data.originLabel}から順番に計算しました。`;
+ status.innerHTML = `
+  <div class="route-result">
+
+    <strong>
+      ${escapeHTML(data.originLabel)}から
+    </strong>
+
+    ${data.legs.map(leg => `
+      <div class="route-leg">
+        ${escapeHTML(leg.from)}
+        →
+        ${escapeHTML(leg.to)}
+        ／
+        ${leg.time === 0 ? '1分未満' : `約${leg.time}分`}
+        ／
+        ${(leg.distance / 1000).toFixed(1)}km
+        ／
+        ${
+          leg.toll == null
+            ? '高速料金なし'
+            : `高速 約${Number(leg.toll).toLocaleString('ja-JP')}円`
+        }
+      </div>
+    `).join('')}
+
+  </div>
+`;
 
 } catch (e) {
 
